@@ -793,6 +793,7 @@ impl Instruction for Move
         let src = ctx.resolve_r_value(&self.r_value)?;
         let dst = ctx.resolve_l_value(&self.l_value)?;
         *ctx.register_reference_mut(dst)? = src;
+        ctx.ip_plus_one();
         Ok(ctx)
     }
 }
