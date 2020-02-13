@@ -3,8 +3,6 @@ use std::collections::HashMap;
 use crate::ParsedLine::OpCode;
 use std::fmt::{Formatter, Error};
 
-mod problem;
-
 static PROG1:&str = include_str!("prog1.mips");
 
 static PROG2:&str = include_str!("prog2.mips");
