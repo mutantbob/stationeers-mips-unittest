@@ -27,9 +27,7 @@ mod tests
                 println!("compile fail {}", err.message)
             },
             Ok(program) => {
-                let mut ctx: CPUContext = CPUContext::new(program.labels(), HashMap::new(),
-                                                          (0..6).map(|_| None).collect(),
-                                                          (0..10).map(|_| std::f32::NAN).collect());
+                let mut ctx: CPUContext = CPUContext::new_simple(&program);
 
                 ctx.attach_device(0, DeviceStateBuilder::new().set("SolarAngle", 14.0).build())?;
                 ctx.attach_device(3, DeviceState::new())?;
@@ -86,9 +84,7 @@ mod tests
                 assert!(false, "failed to compile");
             },
             Ok(program) => {
-                let mut ctx: CPUContext = CPUContext::new(program.labels(), HashMap::new(),
-                                                          (0..6).map(|_| None).collect(),
-                                                          (0..10).map(|_| std::f32::NAN).collect());
+                let mut ctx: CPUContext = CPUContext::new_simple(&program);
 
                 ctx.attach_device(0, DeviceState::new())?;
                 ctx.attach_device(1, DeviceState::new())?;

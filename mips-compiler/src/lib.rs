@@ -28,7 +28,7 @@ impl CPUContext
     {
         CPUContext::new(program.labels(), HashMap::new(),
                         (0..6).map(|_| None).collect(),
-                        (0..10).map(|_| std::f32::NAN).collect())
+                        (0..18).map(|_| std::f32::NAN).collect())
     }
 
     pub fn new(labels: HashMap<String,InstructionPointer>, aliases: HashMap<String,RegisterOrDevice>,
