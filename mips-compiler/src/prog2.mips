@@ -1,0 +1,49 @@
+alias sensorGH d0
+alias sensorPipe d1
+alias pumpGH d3
+alias pumpAtmo d4
+alias filter d5
+
+alias wantGHPump r9
+alias wantFilter r8
+alias wantAtmoPump r7
+alias lowCO2 r6
+alias ghVentPressure r5
+
+define targetGHPressure	108
+define highGHPressure	130
+define targetCO2	0.1
+
+s pumpGH Mode 1
+s pumpAtmo Mode 1
+start:
+
+l r0 sensorGH RatioCarbonDioxide
+slt lowCO2 r0 targetCO2
+
+select ghVentPressure lowCO2 targetGHPressure highGHPressure
+s pumpGH PressureExternal ghVentPressure
+
+l r0 sensorGH Pressure
+sgt r1 r0 highGHPressure
+max wantGHPump r1 lowCO2
+sgt r1 r0 targetGHPressure
+min wantGHPump r1 wantGHPump
+s pumpGH On wantGHPump
+
+#
+
+slt r1 r0 targetGHPressure
+max wantFilter r1 lowCO2
+s filter On wantFilter
+
+#
+
+bdns pumpAtmo afterAtmo
+l r0 sensorPipe Pressure
+slt wantAtmoPump r0 1000
+s pumpAtmo On wantAtmoPump
+afterAtmo:
+
+yield
+j start

@@ -1,0 +1,59 @@
+alias sensor d0
+
+alias vwriter d3
+alias hwriter d4
+
+start:
+
+s sensor Mode 1
+s vwriter On 0
+yield
+l r0 sensor SolarAngle
+sub r1 270 r0
+#add r1 90 r0
+mod r1 r1 360
+yield
+s db Setting r1
+yield
+s hwriter On 1
+s sensor Mode 2
+yield
+
+s hwriter On 0
+l r0 sensor SolarAngle
+
+bgt r0 90 night
+
+div r1 r0 1.5
+sub r1 50 r1
+max r1 r1 0
+min r1 r1 100
+yield
+s db Setting r1
+
+yield
+
+s vwriter On 1
+s sensor Mode 1
+yield
+
+j start
+
+
+night:
+
+s db Setting 0
+s vwriter On 1
+yield
+s vwriter On 0
+yield
+s db Setting 90
+s hwriter On 1
+yield
+s hwriter On 0
+huntdawn:
+yield
+l r0 sensor SolarAngle
+bgt r0 90 huntdawn
+
+j start
