@@ -1491,9 +1491,9 @@ mod tests
 
                     ctx = execute_until_yields2(&program, ctx, 1,
                                                                     |ctx| {
-                                                                        if ctx.instruction_pointer >16 && ctx.instruction_pointer < 21 {
+                                                                        /*if ctx.instruction_pointer >16 && ctx.instruction_pointer < 21 {
                                                                             ctx.debug_dump();
-                                                                        }
+                                                                        }*/
                                                                     }
                     )?;
 
