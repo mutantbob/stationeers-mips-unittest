@@ -994,7 +994,7 @@ pub struct BranchDevice
 {
     dev: AliasOrDevice,
     target: LineNumber,
-    predicate: Box<dyn Fn(&CPUContext, Device)->bool>,
+    predicate: Box<dyn Fn(&CPUContext, Device)->Result<bool,ExecutionError>>,
 }
 
 impl BranchDevice
@@ -1002,7 +1002,7 @@ impl BranchDevice
     pub fn new<'a, I, F>(parts: I , op:F) -> Result<BranchDevice, CompileError>
         where I:Iterator<Item=&'a str>,
 //              F: Fn(f32,f32)->bool +'static
-              F: Fn(&CPUContext, Device)->bool +'static
+              F: Fn(&CPUContext, Device)->Result<bool,ExecutionError> +'static
     {
         let (arg1, target) = expect_2(parts)?;
 
@@ -1013,14 +1013,19 @@ impl BranchDevice
         })
     }
 
-    pub fn device_not_set(ctx : &CPUContext, dev: Device) ->bool
+    pub fn device_not_set(ctx : &CPUContext, dev: Device) ->Result<bool,ExecutionError>
     {
+        println!("bdns ? {}", dev);
         match dev {
-            Device::SpecialB => true,
+            Device::SpecialB => Ok(true),
             Device::Regular(idx) => {
-                match ctx.devices.get(idx as usize) {
-                    Some(_) => false,
-                    None => true,
+                let urgh = ctx.devices.get(idx as usize);
+                match urgh {
+                    Some(l2) => match l2 {
+                        Some(_) => Ok(false),
+                        None => Ok(true),
+                    },
+                    None => Err(ExecutionError::new(&format!("no such device slot d{}", idx))),
                 }
             }
         }
@@ -1038,7 +1043,7 @@ impl Instruction for BranchDevice
 {
     fn execute(&self, mut ctx: CPUContext) -> Result<CPUContext, ExecutionError> {
         let dev = ctx.resolve_device(&self.dev)?;
-        if (self.predicate)(&ctx, dev) {
+        if (self.predicate)(&ctx, dev)? {
             ctx.instruction_pointer = ctx.lookup(&self.target)?;
         } else {
             ctx.ip_plus_one();
