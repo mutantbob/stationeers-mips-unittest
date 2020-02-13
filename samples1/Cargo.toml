@@ -1,0 +1,8 @@
+[package]
+name = "samples1"
+version = "0.1.0"
+authors = ["Robert Forsman <git@thoth.purplefrog.com>"]
+edition = "2018"
+
+[dependencies]
+"stationeers-mips-unittest" = { path = "../mips-compiler" }

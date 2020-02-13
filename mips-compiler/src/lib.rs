@@ -1,19 +1,13 @@
-use std::str::SplitWhitespace;
 use std::collections::HashMap;
-use crate::ParsedLine::OpCode;
 use std::fmt::{Formatter, Error};
 
-static PROG1:&str = include_str!("prog1.mips");
+pub type InstructionPointer = u16;
 
-static PROG2:&str = include_str!("prog2.mips");
-
-type InstructionPointer = u16;
-
-type DeviceState = HashMap<String, f32>;
+pub type DeviceState = HashMap<String, f32>;
 
 //
 
-struct CPUContext
+pub struct CPUContext
 {
     labels: HashMap<String, InstructionPointer>,
     instruction_pointer:InstructionPointer,
@@ -27,7 +21,7 @@ struct CPUContext
 
 impl CPUContext
 {
-    fn new(labels: HashMap<String,InstructionPointer>, aliases: HashMap<String,RegisterOrDevice>,
+    pub fn new(labels: HashMap<String,InstructionPointer>, aliases: HashMap<String,RegisterOrDevice>,
     devices:Vec<Option<DeviceState>>,
     registers:Vec<f32>) ->CPUContext
     {
@@ -43,7 +37,7 @@ impl CPUContext
         }
     }
 
-    fn lookup(&self, label:&LineNumber) -> Result<InstructionPointer, ExecutionError>
+    pub fn lookup(&self, label:&LineNumber) -> Result<InstructionPointer, ExecutionError>
     {
         match label {
             LineNumber::Label(label) => {
@@ -59,7 +53,7 @@ impl CPUContext
         }
     }
 
-    fn resolve_device(&self, token: &AliasOrDevice) -> Result<Device, ExecutionError>
+    pub fn resolve_device(&self, token: &AliasOrDevice) -> Result<Device, ExecutionError>
     {
         match token {
             AliasOrDevice::Alias(name) => {
@@ -85,7 +79,7 @@ impl CPUContext
         }
     }
 
-    fn resolve_r_value(&self, r_value: &RValue) -> Result<f32, ExecutionError>
+    pub fn resolve_r_value(&self, r_value: &RValue) -> Result<f32, ExecutionError>
     {
         match r_value {
             RValue::Number(val) => Ok(*val),
@@ -112,7 +106,7 @@ impl CPUContext
         }
     }
 
-    fn resolve_l_value(&self, l_value: &LValue) -> Result<Register, ExecutionError>
+    pub fn resolve_l_value(&self, l_value: &LValue) -> Result<Register, ExecutionError>
     {
         match l_value {
             LValue::Register(reg) => { Ok(*reg) },
@@ -130,7 +124,7 @@ impl CPUContext
         }
     }
 
-    fn attach_device(&mut self, idx:usize , dev:DeviceState) -> Result<(), ExecutionError>
+    pub fn attach_device(&mut self, idx:usize , dev:DeviceState) -> Result<(), ExecutionError>
     {
         if idx < self.devices.len() {
             self.devices[idx] = Some(dev);
@@ -140,17 +134,17 @@ impl CPUContext
         }
     }
 
-    fn ip_plus_one(&mut self)
+    pub fn ip_plus_one(&mut self)
     {
         self.instruction_pointer+=1;
     }
 
-    fn jump(&mut self, line_number:InstructionPointer)
+    pub fn jump(&mut self, line_number:InstructionPointer)
     {
         self.instruction_pointer = line_number;
     }
 
-    fn set_alias(&mut self, handle: &str, d_line: &RegisterOrDevice, incr_ip: bool)
+    pub fn set_alias(&mut self, handle: &str, d_line: &RegisterOrDevice, incr_ip: bool)
     {
         self.aliases.insert(handle.to_string(), *d_line);
         if incr_ip {
@@ -158,7 +152,7 @@ impl CPUContext
         }
     }
 
-    fn set_define(&mut self, tag: &str, value: f32, incr_ip: bool)
+    pub fn set_define(&mut self, tag: &str, value: f32, incr_ip: bool)
     {
         self.defines.insert(tag.to_string(), value);
         if incr_ip {
@@ -166,7 +160,7 @@ impl CPUContext
         }
     }
 
-    fn device_reference(&mut self, dev:Device) -> Result<&mut DeviceState, ExecutionError>
+    pub fn device_reference(&mut self, dev:Device) -> Result<&mut DeviceState, ExecutionError>
     {
         match dev {
             Device::Regular(idx) => {
@@ -184,7 +178,7 @@ impl CPUContext
         }
     }
 
-    fn get_device_field(&mut self, dev_idx:u8, field:&str) -> Result<f32, ExecutionError>
+    pub fn get_device_field(&mut self, dev_idx:u8, field:&str) -> Result<f32, ExecutionError>
     {
         let dev = Device::Regular(dev_idx);
         let val = self.device_reference(dev)?.get(field);
@@ -194,7 +188,7 @@ impl CPUContext
         }
     }
 
-    fn set_device(&mut self, device:Device, field: &str, value: f32) -> Result<(), ExecutionError>
+    pub fn set_device(&mut self, device:Device, field: &str, value: f32) -> Result<(), ExecutionError>
     {
         self.instruction_pointer+=1;
         self.device_reference(device)
@@ -231,7 +225,7 @@ impl CPUContext
         }*/
     }
 
-    fn register_reference(&self, reg:Register) -> Result<f32, ExecutionError>
+    pub fn register_reference(&self, reg:Register) -> Result<f32, ExecutionError>
     {
         if (reg.idx as usize) >= self.registers.len() {
             return Err(ExecutionError::new(&format!("no register {}", reg)))
@@ -239,7 +233,7 @@ impl CPUContext
         Ok(self.registers[reg.idx as usize])
     }
 
-    fn register_reference_mut(&mut self, reg:Register) -> Result<&mut f32, ExecutionError>
+    pub fn register_reference_mut(&mut self, reg:Register) -> Result<&mut f32, ExecutionError>
     {
         if (reg.idx as usize) >= self.registers.len() {
             return Err(ExecutionError::new(&format!("no register {}", reg)))
@@ -247,7 +241,7 @@ impl CPUContext
         Ok(&mut self.registers[reg.idx as usize])
     }
 
-    fn load_device(&mut self, reg:Register, dev: Device, tag: &str) -> Result<(), ExecutionError>
+    pub fn load_device(&mut self, reg:Register, dev: Device, tag: &str) -> Result<(), ExecutionError>
     {
         if (reg.idx as usize) >= self.registers.len() {
             return Err(ExecutionError::new(&format!("no register {}", reg)))
@@ -281,20 +275,20 @@ impl CPUContext
         */
     }
 
-    fn yield_(&mut self)
+    pub fn yield_(&mut self)
     {
         self.saw_yield = true;
         self.ip_plus_one();
     }
 
-    fn reset_yield(&mut self) ->bool
+    pub fn reset_yield(&mut self) ->bool
     {
         let rval = self.saw_yield;
         self.saw_yield = false;
         return rval;
     }
 
-    fn debug_dump(&self)
+    pub fn debug_dump(&self)
     {
         println!("IP = {}", self.instruction_pointer);
         println!("labels = {:?}", self.labels);
@@ -307,7 +301,7 @@ impl CPUContext
 //
 
 #[derive(Debug,Clone)]
-enum LineNumber
+pub enum LineNumber
 {
     Number(InstructionPointer),
     Label(String),
@@ -315,7 +309,7 @@ enum LineNumber
 
 impl LineNumber
 {
-    fn parse(text: &str) -> Result<LineNumber,CompileError>
+    pub fn parse(text: &str) -> Result<LineNumber,CompileError>
     {
         if let Ok(number) = text.parse::<InstructionPointer>() {
             Ok(LineNumber::Number(number))
@@ -327,20 +321,20 @@ impl LineNumber
 
 //
 
-struct CompileError
+pub struct CompileError
 {
-    message: String,
+    pub message: String,
 }
 
 #[derive(Debug)]
-struct ExecutionError
+pub struct ExecutionError
 {
     message: String,
 }
 
 impl ExecutionError
 {
-    fn new(msg:&str) ->ExecutionError
+    pub fn new(msg:&str) ->ExecutionError
     {
         ExecutionError{message:String::from(msg)}
     }
@@ -349,7 +343,7 @@ impl ExecutionError
 //
 
 #[derive(Copy,Clone,Debug)]
-struct Register
+pub struct Register
 {
     idx:u8
 }
@@ -362,7 +356,7 @@ impl std::fmt::Display for Register
 }
 
 #[derive(Copy,Clone,Debug)]
-enum Device
+pub enum Device
 {
     Regular(u8),
     SpecialB
@@ -370,7 +364,7 @@ enum Device
 
 impl Device
 {
-    fn parse(tag:&str) -> Result<Device, CompileError>
+    pub fn parse(tag:&str) -> Result<Device, CompileError>
     {
         if tag.starts_with("d") {
             if "db" == tag {
@@ -401,7 +395,7 @@ impl std::fmt::Display for Device
 }
 
 #[derive(Copy,Clone,Debug)]
-enum RegisterOrDevice
+pub enum RegisterOrDevice
 {
     Register(Register),
     Device(Device)
@@ -409,7 +403,7 @@ enum RegisterOrDevice
 
 impl RegisterOrDevice
 {
-    fn parse(tag: &str) -> Result<RegisterOrDevice, CompileError>
+    pub fn parse(tag: &str) -> Result<RegisterOrDevice, CompileError>
     {
         if let Ok(dev) = Device::parse(tag) {
             Ok(RegisterOrDevice::Device(dev))
@@ -442,7 +436,7 @@ impl std::fmt::Display for RegisterOrDevice
 
 //
 
-enum AliasOrDevice
+pub enum AliasOrDevice
 {
     Alias(String),
     Device(Device),
@@ -450,7 +444,7 @@ enum AliasOrDevice
 
 impl AliasOrDevice
 {
-    fn parse(text:&str) -> Result<AliasOrDevice, CompileError>
+    pub fn parse(text:&str) -> Result<AliasOrDevice, CompileError>
     {
         if let Ok(dev) = Device::parse(text) {
             Ok(AliasOrDevice::Device(dev))
@@ -462,7 +456,7 @@ impl AliasOrDevice
 
 //
 
-enum RValue
+pub enum RValue
 {
     Number(f32),
     Register(Register),
@@ -471,7 +465,7 @@ enum RValue
 
 impl RValue
 {
-    fn parse(text: &str) -> Result<RValue, CompileError>
+    pub fn parse(text: &str) -> Result<RValue, CompileError>
     {
         if let Ok(val) = text.parse::<f32>() {
             Ok(RValue::Number(val))
@@ -490,7 +484,7 @@ impl RValue
 
 //
 
-enum LValue
+pub enum LValue
 {
     Register(Register),
     Alias(String),
@@ -498,7 +492,7 @@ enum LValue
 
 impl LValue
 {
-    fn parse(text:&str) -> Result<LValue, CompileError>
+    pub fn parse(text:&str) -> Result<LValue, CompileError>
     {
         if text.starts_with("r") {
             if let Ok(val) = text[1..].parse::<u8>() {
@@ -511,14 +505,14 @@ impl LValue
 
 //
 
-trait Instruction
+pub trait Instruction
 {
     fn execute(&self, ctx: CPUContext) -> Result<CPUContext, ExecutionError>;
 }
 
 //
 
-struct NoCode {}
+pub struct NoCode {}
 
 impl Instruction for NoCode
 {
@@ -529,7 +523,7 @@ impl Instruction for NoCode
     }
 }
 
-struct UnrecognizedOpcode
+pub struct UnrecognizedOpcode
 {
     opcode:String,
 }
@@ -544,14 +538,15 @@ impl Instruction for UnrecognizedOpcode
 
 //
 
-struct Jump
+pub struct Jump
 {
     line_number: LineNumber
 }
 
 impl Jump
 {
-    fn new(mut parts: SplitWhitespace) ->Result<Jump, CompileError>
+    pub fn new<'a,I>(mut parts: I) ->Result<Jump, CompileError>
+        where I:Iterator<Item=&'a str>
     {
         let generic_error = "'j' jump instruction requires 1 argument of line number or label".to_string();
         let tgt= parts.next();
@@ -597,7 +592,7 @@ impl Instruction for Jump
 
 //
 
-fn expect_2<'a, I>(mut parts: I) -> Result<(String, String), CompileError>
+pub fn expect_2<'a, I>(mut parts: I) -> Result<(String, String), CompileError>
     where I:Iterator<Item=&'a str>
 {
     let one = parts.next();
@@ -611,7 +606,7 @@ fn expect_2<'a, I>(mut parts: I) -> Result<(String, String), CompileError>
     }
 }
 
-fn expect_3<'a, I>(mut parts: I) -> Result<(String, String, String), CompileError>
+pub fn expect_3<'a, I>(mut parts: I) -> Result<(String, String, String), CompileError>
     where I:Iterator<Item=&'a str>
 {
     let one = parts.next();
@@ -626,7 +621,7 @@ fn expect_3<'a, I>(mut parts: I) -> Result<(String, String, String), CompileErro
     }
 }
 
-fn expect_4<'a, I>(mut parts: I) -> Result<(String, String, String, String), CompileError>
+pub fn expect_4<'a, I>(mut parts: I) -> Result<(String, String, String, String), CompileError>
     where I:Iterator<Item=&'a str>
 {
     let one = parts.next();
@@ -644,7 +639,7 @@ fn expect_4<'a, I>(mut parts: I) -> Result<(String, String, String, String), Com
 
 //
 
-struct Alias
+pub struct Alias
 {
     handle: String,
     d_line: RegisterOrDevice,
@@ -652,7 +647,8 @@ struct Alias
 
 impl Alias
 {
-    fn new(parts: SplitWhitespace) -> Result<Alias, CompileError>
+    pub fn new<'a,I>(parts: I) -> Result<Alias, CompileError>
+        where I:Iterator<Item=&'a str>
     {
         let (label, d_line) = expect_2(parts)?;
         let d_line = RegisterOrDevice::parse(&d_line)?;
@@ -670,7 +666,7 @@ impl Instruction for Alias
 
 //
 
-struct Define
+pub struct Define
 {
     tag:String,
     value:f32,
@@ -679,7 +675,8 @@ struct Define
 impl Define
 {
 
-    fn new(parts: SplitWhitespace) -> Result<Define, CompileError>
+    pub fn new<'a,I>(parts: I) -> Result<Define, CompileError>
+        where I:Iterator<Item=&'a str>
     {
         let (tag, value) = expect_2(parts)?;
         match value.parse::<f32>() {
@@ -700,7 +697,7 @@ impl Instruction for Define
 
 //
 
-struct SetDevice
+pub struct SetDevice
 {
     device: AliasOrDevice,
     field: String,
@@ -709,7 +706,7 @@ struct SetDevice
 
 impl SetDevice
 {
-    fn new<'a, I>(parts: I ) -> Result<SetDevice, CompileError>
+    pub fn new<'a, I>(parts: I ) -> Result<SetDevice, CompileError>
         where I:Iterator<Item=&'a str>
     {
         let (dev, tag, r_value) = expect_3(parts)?;
@@ -734,7 +731,7 @@ impl Instruction for SetDevice
 
 //
 
-struct LoadDevice
+pub struct LoadDevice
 {
     l_value: LValue,
     device: AliasOrDevice,
@@ -743,7 +740,7 @@ struct LoadDevice
 
 impl LoadDevice
 {
-    fn new<'a, I>(parts: I ) -> Result<LoadDevice, CompileError>
+    pub fn new<'a, I>(parts: I ) -> Result<LoadDevice, CompileError>
         where I:Iterator<Item=&'a str>
     {
         let (l_value, dev, tag) = expect_3(parts)?;
@@ -769,7 +766,7 @@ impl Instruction for LoadDevice
 
 //
 
-struct Move
+pub struct Move
 {
     l_value: LValue,
     r_value: RValue,
@@ -778,7 +775,7 @@ struct Move
 impl Move
 {
 
-    fn new<'a, I>(mut parts: I ) -> Result<Move, CompileError>
+    pub fn new<'a, I>(parts: I ) -> Result<Move, CompileError>
         where I:Iterator<Item=&'a str>
     {
         let (l_value, r_value) = expect_2(parts)?;
@@ -801,46 +798,8 @@ impl Instruction for Move
 }
 
 //
-/*
-struct Subtract
-{
-    l_value: LValue,
-    arg1: RValue,
-    arg2: RValue,
-}
 
-impl Subtract
-{
-    fn new<'a, I>(parts: I ) -> Result<Subtract, CompileError>
-        where I:Iterator<Item=&'a str>
-    {
-        let (l_value, arg1, arg2) = expect_3(parts)?;
-
-        Ok(Subtract{
-            l_value: LValue::parse(&l_value)?,
-            arg1: RValue::parse(&arg1)?,
-            arg2: RValue::parse(&arg2)?,
-        })
-    }
-}
-
-impl Instruction for Subtract
-{
-    fn execute(&self, mut ctx: CPUContext) -> Result<CPUContext, ExecutionError>
-    {
-        let val = ctx.resolve_r_value(&self.arg1)? - ctx.resolve_r_value(&self.arg2)?;
-        let dst = ctx.register_reference(ctx.resolve_l_value(&self.l_value)?)?;
-        *dst = val;
-        Ok(ctx)
-
-
-    }
-}
-*/
-
-//
-
-struct BinaryOperator
+pub struct BinaryOperator
 {
     l_value: LValue,
     arg1: RValue,
@@ -850,7 +809,7 @@ struct BinaryOperator
 
 impl BinaryOperator
 {
-    fn new<'a, I, F>(parts: I , op:F) -> Result<BinaryOperator, CompileError>
+    pub fn new<'a, I, F>(parts: I , op:F) -> Result<BinaryOperator, CompileError>
         where I:Iterator<Item=&'a str>,
               F: Fn(f32,f32)->f32 +'static
     {
@@ -864,49 +823,49 @@ impl BinaryOperator
         })
     }
 
-    fn add<'a, I>(parts:I) -> Result<BinaryOperator, CompileError>
+    pub fn add<'a, I>(parts:I) -> Result<BinaryOperator, CompileError>
         where I:Iterator<Item=&'a str>
     {
         BinaryOperator::new(parts, |a,b| a+b)
     }
 
-    fn sub<'a, I>(parts:I) -> Result<BinaryOperator, CompileError>
+    pub fn sub<'a, I>(parts:I) -> Result<BinaryOperator, CompileError>
         where I:Iterator<Item=&'a str>
     {
         BinaryOperator::new(parts, |a,b| a-b)
     }
 
-    fn div<'a, I>(parts:I) -> Result<BinaryOperator, CompileError>
+    pub fn div<'a, I>(parts:I) -> Result<BinaryOperator, CompileError>
         where I:Iterator<Item=&'a str>
     {
         BinaryOperator::new(parts, |a,b| a/b)
     }
 
-    fn modulus<'a, I>(parts:I) -> Result<BinaryOperator, CompileError>
+    pub fn modulus<'a, I>(parts:I) -> Result<BinaryOperator, CompileError>
         where I:Iterator<Item=&'a str>
     {
         BinaryOperator::new(parts, |a,b| a%b)
     }
 
-    fn max<'a, I>(parts:I) -> Result<BinaryOperator, CompileError>
+    pub fn max<'a, I>(parts:I) -> Result<BinaryOperator, CompileError>
         where I:Iterator<Item=&'a str>
     {
         BinaryOperator::new(parts, |a,b| a.max(b))
     }
 
-    fn min<'a, I>(parts:I) -> Result<BinaryOperator, CompileError>
+    pub fn min<'a, I>(parts:I) -> Result<BinaryOperator, CompileError>
         where I:Iterator<Item=&'a str>
     {
         BinaryOperator::new(parts, |a,b| a.min(b))
     }
 
-    fn slt<'a, I>(parts:I) -> Result<BinaryOperator, CompileError>
+    pub fn slt<'a, I>(parts:I) -> Result<BinaryOperator, CompileError>
         where I:Iterator<Item=&'a str>
     {
         BinaryOperator::new(parts, |a,b| if a<b { 1.0 } else {0.0} )
     }
 
-    fn sgt<'a, I>(parts:I) -> Result<BinaryOperator, CompileError>
+    pub fn sgt<'a, I>(parts:I) -> Result<BinaryOperator, CompileError>
         where I:Iterator<Item=&'a str>
     {
         BinaryOperator::new(parts, |a,b| if a>b { 1.0 } else {0.0} )
@@ -929,7 +888,7 @@ impl Instruction for BinaryOperator
 
 //
 
-struct TernaryOperator
+pub struct TernaryOperator
 {
     l_value: LValue,
     arg1: RValue,
@@ -940,7 +899,7 @@ struct TernaryOperator
 
 impl TernaryOperator
 {
-    fn new<'a, I, F>(parts: I , op:F) -> Result<TernaryOperator, CompileError>
+    pub fn new<'a, I, F>(parts: I , op:F) -> Result<TernaryOperator, CompileError>
         where I:Iterator<Item=&'a str>,
               F: Fn(f32,f32,f32)->f32 +'static
     {
@@ -955,7 +914,7 @@ impl TernaryOperator
         })
     }
 
-    fn select<'a, I>(parts:I) -> Result<TernaryOperator, CompileError>
+    pub fn select<'a, I>(parts:I) -> Result<TernaryOperator, CompileError>
         where I:Iterator<Item=&'a str>
     {
         TernaryOperator::new(parts, |a,b, c| if a!=0.0 {b} else {c} )
@@ -979,7 +938,7 @@ impl Instruction for TernaryOperator
 
 //
 
-struct Branch
+pub struct Branch
 {
     arg1: RValue,
     arg2: RValue,
@@ -989,7 +948,7 @@ struct Branch
 
 impl Branch
 {
-    fn new<'a, I, F>(parts: I , op:F) -> Result<Branch, CompileError>
+    pub fn new<'a, I, F>(parts: I , op:F) -> Result<Branch, CompileError>
         where I:Iterator<Item=&'a str>,
               F: Fn(f32,f32)->bool +'static
     {
@@ -1003,7 +962,7 @@ impl Branch
         })
     }
 
-    fn gt<'a, I>(parts:I) -> Result<Branch, CompileError>
+    pub fn gt<'a, I>(parts:I) -> Result<Branch, CompileError>
         where I:Iterator<Item=&'a str>
     {
         Branch::new(parts, |a,b| a>b)
@@ -1030,7 +989,7 @@ impl Instruction for Branch
 
 //
 
-struct BranchDevice
+pub struct BranchDevice
 {
     dev: AliasOrDevice,
     target: LineNumber,
@@ -1039,7 +998,7 @@ struct BranchDevice
 
 impl BranchDevice
 {
-    fn new<'a, I, F>(parts: I , op:F) -> Result<BranchDevice, CompileError>
+    pub fn new<'a, I, F>(parts: I , op:F) -> Result<BranchDevice, CompileError>
         where I:Iterator<Item=&'a str>,
 //              F: Fn(f32,f32)->bool +'static
               F: Fn(&CPUContext, Device)->bool +'static
@@ -1053,7 +1012,7 @@ impl BranchDevice
         })
     }
 
-    fn device_not_set(ctx : &CPUContext, dev: Device) ->bool
+    pub fn device_not_set(ctx : &CPUContext, dev: Device) ->bool
     {
         match dev {
             Device::SpecialB => true,
@@ -1067,7 +1026,7 @@ impl BranchDevice
 
     }
 
-    fn bdns<'a,I>(parts:I) ->Result<BranchDevice, CompileError>
+    pub fn bdns<'a,I>(parts:I) ->Result<BranchDevice, CompileError>
         where I:Iterator<Item=&'a str>
     {
         BranchDevice::new(parts, BranchDevice::device_not_set)
@@ -1089,7 +1048,7 @@ impl Instruction for BranchDevice
 
 //
 
-struct Yield { }
+pub struct Yield { }
 
 impl Instruction for Yield
 {
@@ -1106,7 +1065,7 @@ impl<T:Instruction+'static> From<Result<T, CompileError>> for ParsedLine
     fn from(x: Result<T, CompileError>) -> Self
     {
         match x {
-            Ok(a) => OpCode(Box::new(a)),
+            Ok(a) => ParsedLine::OpCode(Box::new(a)),
             Err(e) => ParsedLine::Err(e),
         }
     }
@@ -1115,7 +1074,7 @@ impl<T:Instruction+'static> From<Result<T, CompileError>> for ParsedLine
 
 //
 
-enum ParsedLine
+pub enum ParsedLine
 {
     OpCode(Box<dyn Instruction>),
     JumpLabel(String),
@@ -1124,7 +1083,7 @@ enum ParsedLine
 
 //
 
-fn parse_one_line(line:&str) -> ParsedLine
+pub fn parse_one_line(line:&str) -> ParsedLine
 {
     let line = {
         if let Some(idx) = line.find('#') {
@@ -1200,26 +1159,26 @@ fn parse_one_line(line:&str) -> ParsedLine
 
 //
 
-struct DeviceStateBuilder
+pub struct DeviceStateBuilder
 {
     rval : DeviceState,
 }
 
 impl DeviceStateBuilder
 {
-    fn new() -> DeviceStateBuilder
+    pub fn new() -> DeviceStateBuilder
     {
         DeviceStateBuilder{rval:DeviceState::new()}
     }
 
-    fn set(mut self, field:&str, value:f32) -> DeviceStateBuilder
+    pub fn set(mut self, field:&str, value:f32) -> DeviceStateBuilder
     {
         self.rval .insert(field.to_string(), value);
 
         self
     }
 
-    fn build(self) -> DeviceState
+    pub fn build(self) -> DeviceState
     {
         self.rval
     }
@@ -1227,7 +1186,7 @@ impl DeviceStateBuilder
 
 //
 
-struct CompiledProgram
+pub struct CompiledProgram
 {
     codes: Vec<Box<dyn Instruction>>,
     labels: HashMap<String, InstructionPointer>,
@@ -1235,12 +1194,12 @@ struct CompiledProgram
 
 impl CompiledProgram
 {
-    fn labels(&self) -> HashMap<String,InstructionPointer>
+    pub fn labels(&self) -> HashMap<String,InstructionPointer>
     {
         self.labels.clone()
     }
 
-    fn get_instruction(&self, idx:InstructionPointer) -> Option<&dyn Instruction>
+    pub fn get_instruction(&self, idx:InstructionPointer) -> Option<&dyn Instruction>
     {
         if (idx as usize) < self.codes.len() {
             Some(& * self.codes[idx as usize])
@@ -1251,14 +1210,14 @@ impl CompiledProgram
 }
 
 
-fn compile(src:&str) ->Result<CompiledProgram, CompileError>
+pub fn compile(src:&str) ->Result<CompiledProgram, CompileError>
 {
     let lines:std::str::Lines = src.lines();
 
     compile_lines(lines)
 }
 
-fn compile_lines<'a,I>(lines: I) -> Result<CompiledProgram, CompileError>
+pub fn compile_lines<'a,I>(lines: I) -> Result<CompiledProgram, CompileError>
     where I:Iterator<Item=&'a str>
 {
     let mut codes2: Vec<Box<dyn Instruction>> = Vec::new();
@@ -1290,7 +1249,7 @@ fn compile_lines<'a,I>(lines: I) -> Result<CompiledProgram, CompileError>
 //
 //
 
-fn execute_until_yields(program:&CompiledProgram, mut ctx:CPUContext, min_yields:u32) -> Result<CPUContext, ExecutionError>
+pub fn execute_until_yields(program:&CompiledProgram, mut ctx:CPUContext, min_yields:u32) -> Result<CPUContext, ExecutionError>
 {
     let mut yield_count=0;
     for _i in 0..99 {
@@ -1311,7 +1270,7 @@ fn execute_until_yields(program:&CompiledProgram, mut ctx:CPUContext, min_yields
     Ok(ctx)
 }
 
-fn execute_until_yields2<F>(program:&CompiledProgram, mut ctx:CPUContext, min_yields:u32, callback:F) -> Result<CPUContext, ExecutionError>
+pub fn execute_until_yields2<F>(program:&CompiledProgram, mut ctx:CPUContext, min_yields:u32, callback:F) -> Result<CPUContext, ExecutionError>
     where F:Fn(&mut CPUContext)
 {
     let mut yield_count=0;
@@ -1332,220 +1291,4 @@ fn execute_until_yields2<F>(program:&CompiledProgram, mut ctx:CPUContext, min_yi
         println!("IP = {}", ctx.instruction_pointer)
     }
     Ok(ctx)
-}
-
-/*
-fn main() -> Result<(), ExecutionError> {
-    println!("Hello, world!");
-    if false {
-        print!("{}", PROG1);
-    }
-
-    test_prog2()?;
-    if false {
-        test_prog1()?;
-    }
-
-    Ok(())
-}
-*/
-
-#[cfg(test)]
-
-mod tests
-{
-    use super::*;
-
-    #[test]
-    fn test_prog1() ->Result<(), ExecutionError> {
-
-        let prog1 = compile(PROG1);
-        match prog1 {
-            Err(err) => {
-                println!("compile fail {}", err.message)
-            },
-            Ok(program) => {
-                let mut ctx: CPUContext = CPUContext::new(program.labels(), HashMap::new(),
-                                                          (0..6).map(|_| None).collect(),
-                                                          (0..10).map(|_| std::f32::NAN).collect());
-
-                ctx.attach_device(0, DeviceStateBuilder::new().set("SolarAngle", 14.0).build())?;
-                ctx.attach_device(3, DeviceState::new())?;
-                ctx.attach_device(4, DeviceState::new())?;
-
-                let max_yields = 8;
-                ctx = execute_until_yields(&program, ctx, max_yields)?;
-                if false {
-                    ctx.debug_dump();
-                }
-            }
-        }
-
-        Ok(())
-    }
-
-    #[test]
-    fn test_prog2() ->Result<(), ExecutionError> {
-
-        fn set_environment(ctx:&mut CPUContext, gh_pressure:f32, gh_co2:f32, pipe_pressure:f32) ->Result<(), ExecutionError>
-        {
-            let gh_sensor = ctx.device_reference(Device::Regular(0))?;
-            gh_sensor.insert("Pressure".to_string(), gh_pressure);
-            gh_sensor.insert("RatioCarbonDioxide".to_string(), gh_co2);
-
-            let pipe_sensor = ctx.device_reference(Device::Regular(1))?;
-            pipe_sensor.insert("Pressure".to_string(), pipe_pressure);
-
-            Ok(())
-        }
-
-        fn check_pumps(ctx:&mut CPUContext, gh_on:bool, atmo_on:bool, filter_on:bool, vent_pressure:f32) ->Result<(), ExecutionError>
-        {
-            fn blargh(ctx:&mut CPUContext, dev_idx:u8) ->Result<f32,ExecutionError>{
-                let rval = ctx.device_reference(Device::Regular(dev_idx))?.get("On").unwrap();
-                println!("d{}.On = {}", dev_idx, rval);
-                Ok(*rval)
-            }
-
-            assert_eq!(blargh(ctx, 3)?, if gh_on {1_f32} else {0_f32}, "wrong GH pump");
-            assert_eq!(blargh(ctx, 4)?, if atmo_on {1_f32} else {0_f32}, "wrong atmo pump");
-            assert_eq!(blargh(ctx, 5)?, if filter_on {1_f32} else {0_f32}, "wrong filter");
-
-            if gh_on {
-                assert_eq!(vent_pressure, ctx.get_device_field(3, "PressureExternal")?, "wrong vent pressure");
-            }
-            Ok(())
-        }
-
-        let prog1 = compile(PROG2);
-        match prog1 {
-            Err(err) => {
-                println!("compile fail {}", err.message);
-                assert!(false, "failed to compile");
-            },
-            Ok(program) => {
-                let mut ctx: CPUContext = CPUContext::new(program.labels(), HashMap::new(),
-                                                          (0..6).map(|_| None).collect(),
-                                                          (0..10).map(|_| std::f32::NAN).collect());
-
-                ctx.attach_device(0, DeviceState::new())?;
-                ctx.attach_device(1, DeviceState::new())?;
-                ctx.attach_device(3, DeviceState::new())?;
-                ctx.attach_device(4, DeviceState::new())?;
-                ctx.attach_device(5, DeviceState::new())?;
-
-                {
-                    set_environment(&mut ctx, 90., 0.02, 900.0)?;
-
-                    ctx = execute_until_yields(&program, ctx, 1)?;
-
-                    check_pumps(&mut ctx, false, true, true, 108.);
-                }
-
-                {
-                    set_environment(&mut ctx, 90., 0.02, 4000.0)?;
-
-                    ctx = execute_until_yields(&program, ctx, 1)?;
-
-                    check_pumps(&mut ctx, false, false, true, 108.);
-                }
-
-                {
-                    set_environment(&mut ctx, 125., 0.02, 900.0)?;
-
-                    ctx = execute_until_yields(&program, ctx, 1)?;
-
-                    check_pumps(&mut ctx, true, true, true, 108.);
-                }
-
-                {
-                    set_environment(&mut ctx, 125., 0.02, 4000.0)?;
-
-                    ctx = execute_until_yields(&program, ctx, 1)?;
-
-                    check_pumps(&mut ctx, true, false, true, 108.);
-                }
-
-                //
-
-                {
-                    set_environment(&mut ctx, 90., 0.2, 900.0)?;
-
-                    ctx = execute_until_yields(&program, ctx, 1)?;
-
-                    check_pumps(&mut ctx, false, true, true, 130.);
-                }
-
-                {
-                    set_environment(&mut ctx, 90., 0.2, 4000.0)?;
-
-                    ctx = execute_until_yields(&program, ctx, 1)?;
-
-                    check_pumps(&mut ctx, false, false, true, 130.);
-                }
-
-                {
-                    set_environment(&mut ctx, 125., 0.2, 900.0)?;
-
-                    ctx = execute_until_yields2(&program, ctx, 1,
-                                                                    |ctx| {
-                                                                        /*if ctx.instruction_pointer >16 && ctx.instruction_pointer < 21 {
-                                                                            ctx.debug_dump();
-                                                                        }*/
-                                                                    }
-                    )?;
-
-                    check_pumps(&mut ctx, false, true, false, -1.);
-                }
-
-                {
-                    set_environment(&mut ctx, 125., 0.2, 4000.0)?;
-
-                    ctx = execute_until_yields(&program, ctx, 1)?;
-
-                    check_pumps(&mut ctx, false, false, false, -1.);
-                }
-
-                //
-
-                {
-                    set_environment(&mut ctx, 132., 0.2, 4000.0)?;
-
-                    ctx = execute_until_yields(&program, ctx, 1)?;
-
-                    check_pumps(&mut ctx, true, false, false, 130.);
-                }
-
-                {
-                    set_environment(&mut ctx, 132., 0.03, 4000.0)?;
-
-                    ctx = execute_until_yields(&program, ctx, 1)?;
-
-                    check_pumps(&mut ctx, true, false, true, 108.);
-                }
-
-                {
-                    set_environment(&mut ctx, 132., 0.2, 200.0)?;
-
-                    ctx = execute_until_yields(&program, ctx, 1)?;
-
-                    check_pumps(&mut ctx, true, true, false, 130.);
-                }
-
-                {
-                    set_environment(&mut ctx, 132., 0.03, 200.0)?;
-
-                    ctx = execute_until_yields(&program, ctx, 1)?;
-
-                    check_pumps(&mut ctx, true, true, true, 108.);
-                }
-
-
-                //ctx.debug_dump();
-            }
-        }
-
-        Ok(())
-    }
-
 }
