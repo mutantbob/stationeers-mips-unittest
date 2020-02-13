@@ -1292,7 +1292,7 @@ fn compile_lines<'a,I>(lines: I) -> Result<CompiledProgram, CompileError>
 //
 //
 
-fn execute_until_yields(program:&CompiledProgram, mut ctx:CPUContext, max_yields:u32) -> Result<CPUContext, ExecutionError>
+fn execute_until_yields(program:&CompiledProgram, mut ctx:CPUContext, min_yields:u32) -> Result<CPUContext, ExecutionError>
 {
     let mut yield_count=0;
     for _i in 0..99 {
@@ -1304,7 +1304,7 @@ fn execute_until_yields(program:&CompiledProgram, mut ctx:CPUContext, max_yields
         ctx = inst.unwrap().execute(ctx)?;
         if ctx.reset_yield() {
             yield_count+=1;
-            if yield_count >= max_yields {
+            if yield_count >= min_yields {
                 break;
             }
         }
@@ -1313,7 +1313,7 @@ fn execute_until_yields(program:&CompiledProgram, mut ctx:CPUContext, max_yields
     Ok(ctx)
 }
 
-fn execute_until_yields2<F>(program:&CompiledProgram, mut ctx:CPUContext, max_yields:u32, callback:F) -> Result<CPUContext, ExecutionError>
+fn execute_until_yields2<F>(program:&CompiledProgram, mut ctx:CPUContext, min_yields:u32, callback:F) -> Result<CPUContext, ExecutionError>
     where F:Fn(&mut CPUContext)
 {
     let mut yield_count=0;
@@ -1327,7 +1327,7 @@ fn execute_until_yields2<F>(program:&CompiledProgram, mut ctx:CPUContext, max_yi
         callback(&mut ctx);
         if ctx.reset_yield() {
             yield_count+=1;
-            if yield_count >= max_yields {
+            if yield_count >= min_yields {
                 break;
             }
         }
