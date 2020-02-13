@@ -5,6 +5,9 @@ pub type InstructionPointer = u16;
 
 pub type DeviceState = HashMap<String, f32>;
 
+#[cfg(test)]
+mod tests;
+
 //
 
 pub struct CPUContext
@@ -21,6 +24,13 @@ pub struct CPUContext
 
 impl CPUContext
 {
+    pub fn new_simple(program:&CompiledProgram) -> CPUContext
+    {
+        CPUContext::new(program.labels(), HashMap::new(),
+                        (0..6).map(|_| None).collect(),
+                        (0..10).map(|_| std::f32::NAN).collect())
+    }
+
     pub fn new(labels: HashMap<String,InstructionPointer>, aliases: HashMap<String,RegisterOrDevice>,
     devices:Vec<Option<DeviceState>>,
     registers:Vec<f32>) ->CPUContext
@@ -321,6 +331,7 @@ impl LineNumber
 
 //
 
+#[derive(Debug)]
 pub struct CompileError
 {
     pub message: String,
@@ -337,6 +348,29 @@ impl ExecutionError
     pub fn new(msg:&str) ->ExecutionError
     {
         ExecutionError{message:String::from(msg)}
+    }
+}
+
+//
+
+#[derive(Debug)]
+pub enum MultiError
+{
+    Compile(CompileError),
+    Execution(ExecutionError),
+}
+
+impl From<CompileError> for MultiError
+{
+    fn from(e: CompileError) -> Self {
+        MultiError::Compile(e)
+    }
+}
+
+impl From<ExecutionError> for MultiError
+{
+    fn from(e: ExecutionError) -> Self {
+        MultiError::Execution(e)
     }
 }
 
