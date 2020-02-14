@@ -1,0 +1,6 @@
+bapal r0 r1 r2 cake
+move r9 3.5
+j end
+cake:
+move r9 -4
+end:

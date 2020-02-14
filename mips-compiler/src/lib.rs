@@ -1160,11 +1160,12 @@ pub struct BranchTernary
     frac: RValue,
     target: LineNumber,
     op: Box<dyn Fn(f32,f32,f32)->bool>,
+    and_link: bool,
 }
 
 impl BranchTernary
 {
-    pub fn new<'a, I, F>(parts: I , op:F) -> Result<BranchTernary, CompileError>
+    pub fn new<'a, I, F>(parts: I , op:F, and_link:bool) -> Result<BranchTernary, CompileError>
         where I:Iterator<Item=&'a str>,
               F: Fn(f32,f32,f32)->bool +'static
     {
@@ -1176,6 +1177,7 @@ impl BranchTernary
             frac: RValue::parse(&arg3)?,
             target: LineNumber::parse(&target)?,
             op: Box::new(op),
+            and_link:and_link,
         })
     }
 
@@ -1192,7 +1194,13 @@ impl BranchTernary
     pub fn bap<'a, I>(parts:I) -> Result<BranchTernary, CompileError>
         where I:Iterator<Item=&'a str>
     {
-        BranchTernary::new(parts, BranchTernary::approximately_the_same)
+        BranchTernary::new(parts, BranchTernary::approximately_the_same, false)
+    }
+
+    pub fn bapal<'a, I>(parts:I) -> Result<BranchTernary, CompileError>
+        where I:Iterator<Item=&'a str>
+    {
+        BranchTernary::new(parts, BranchTernary::approximately_the_same, true)
     }
 
 }
@@ -1207,6 +1215,9 @@ impl Instruction for BranchTernary
 
         let result = (self.op)(a,b, c);
         if result {
+            if self.and_link {
+                ctx.set_ra(ctx.instruction_pointer+1);
+            }
             ctx.instruction_pointer = ctx.lookup(&self.target)?;
         } else {
             ctx.instruction_pointer += 1;
@@ -1316,6 +1327,8 @@ pub fn parse_one_line(line:&str) -> ParsedLine
 
             } else if "bap" == opcode {
                 BranchTernary::bap(parts).into()
+            } else if "bapal" == opcode {
+                BranchTernary::bapal(parts).into()
 
             } else if "bgt" == opcode {
                 Branch::gt(parts).into()
