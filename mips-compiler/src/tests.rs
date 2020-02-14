@@ -136,7 +136,7 @@ pub fn bad_register() -> Result<(), MultiError>
     let program = compile(source)?;
 
     {
-        let mut ctx = CPUContext::new_simple(&program);
+        let ctx = CPUContext::new_simple(&program);
         assert!( execute_until_yields(&program, ctx, 99).is_err(), "should have failed to execute");
     }
 
