@@ -231,6 +231,59 @@ pub fn test_store2() ->Result<(), MultiError>
 //
 
 #[test]
+pub fn test_bap1() ->Result<(), MultiError>
+{
+    let source = include_str!("tests/test_bap.mips");
+    let program = compile(source)?;
+
+    let mut ctx = CPUContext::new_simple(&program);
+    *ctx.register_reference_mut(Register{idx:0})? = 4.0;
+    *ctx.register_reference_mut(Register{idx:1})? = 4.01;
+    *ctx.register_reference_mut(Register{idx:2})? = 0.01;
+    ctx = execute_until_yields(&program, ctx, 99)?;
+
+    assert_eq!(ctx.register_reference(Register{idx:9})?, 1.0);
+
+    Ok(())
+}
+
+#[test]
+pub fn test_bap2() ->Result<(), MultiError>
+{
+    let source = include_str!("tests/test_bap.mips");
+    let program = compile(source)?;
+
+    let mut ctx = CPUContext::new_simple(&program);
+    *ctx.register_reference_mut(Register{idx:0})? = 4.0;
+    *ctx.register_reference_mut(Register{idx:1})? = 4.05;
+    *ctx.register_reference_mut(Register{idx:2})? = 0.01;
+    ctx = execute_until_yields(&program, ctx, 99)?;
+
+    assert_eq!(ctx.register_reference(Register{idx:9})?, 2.5);
+
+    Ok(())
+}
+
+#[test]
+pub fn test_bap3() ->Result<(), MultiError>
+{
+    let source = include_str!("tests/test_bap.mips");
+    let program = compile(source)?;
+
+    let mut ctx = CPUContext::new_simple(&program);
+    *ctx.register_reference_mut(Register{idx:0})? = -4.0;
+    *ctx.register_reference_mut(Register{idx:1})? = -4.01;
+    *ctx.register_reference_mut(Register{idx:2})? = 0.01;
+    ctx = execute_until_yields(&program, ctx, 99)?;
+
+    assert_eq!(ctx.register_reference(Register{idx:9})?, 1.0);
+
+    Ok(())
+}
+
+//
+
+#[test]
 pub fn bad_register() -> Result<(), MultiError>
 {
 

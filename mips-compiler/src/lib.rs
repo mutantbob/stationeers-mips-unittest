@@ -1153,6 +1153,70 @@ impl Instruction for BranchDevice
 
 //
 
+pub struct BranchTernary
+{
+    arg1: RValue,
+    arg2: RValue,
+    frac: RValue,
+    target: LineNumber,
+    op: Box<dyn Fn(f32,f32,f32)->bool>,
+}
+
+impl BranchTernary
+{
+    pub fn new<'a, I, F>(parts: I , op:F) -> Result<BranchTernary, CompileError>
+        where I:Iterator<Item=&'a str>,
+              F: Fn(f32,f32,f32)->bool +'static
+    {
+        let (arg1, arg2, arg3, target) = expect_4(parts)?;
+
+        Ok(BranchTernary{
+            arg1: RValue::parse(&arg1)?,
+            arg2: RValue::parse(&arg2)?,
+            frac: RValue::parse(&arg3)?,
+            target: LineNumber::parse(&target)?,
+            op: Box::new(op),
+        })
+    }
+
+    pub fn approximately_the_same(a:f32, b:f32, frac:f32) ->bool
+    {
+        // yeah, this is mildly confusing
+        let margin1 = std::f32::EPSILON * 8.;
+        let scale = a.abs().max(b.abs());
+        let margin2 = frac * scale;
+        let tolerance = margin1.max(margin2);
+        (a-b).abs() < tolerance
+    }
+
+    pub fn bap<'a, I>(parts:I) -> Result<BranchTernary, CompileError>
+        where I:Iterator<Item=&'a str>
+    {
+        BranchTernary::new(parts, BranchTernary::approximately_the_same)
+    }
+
+}
+
+impl Instruction for BranchTernary
+{
+    fn execute(&self, mut ctx: CPUContext) -> Result<CPUContext, ExecutionError>
+    {
+        let a = ctx.resolve_r_value(&self.arg1)?;
+        let b = ctx.resolve_r_value(&self.arg2)?;
+        let c = ctx.resolve_r_value(&self.frac)?;
+
+        let result = (self.op)(a,b, c);
+        if result {
+            ctx.instruction_pointer = ctx.lookup(&self.target)?;
+        } else {
+            ctx.instruction_pointer += 1;
+        }
+        Ok(ctx)
+    }
+}
+
+//
+
 pub struct Yield { }
 
 impl Instruction for Yield
@@ -1249,6 +1313,9 @@ pub fn parse_one_line(line:&str) -> ParsedLine
 
             } else if "select" == opcode {
                 TernaryOperator::select(parts).into()
+
+            } else if "bap" == opcode {
+                BranchTernary::bap(parts).into()
 
             } else if "bgt" == opcode {
                 Branch::gt(parts).into()
