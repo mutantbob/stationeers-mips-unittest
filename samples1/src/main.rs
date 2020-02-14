@@ -93,7 +93,7 @@ mod tests
 
                     ctx = execute_until_yields(&program, ctx, 1)?;
 
-                    check_pumps(&mut ctx, false, true, true, 108.);
+                    check_pumps(&mut ctx, false, true, true, 108.)?;
                 }
 
                 {
@@ -101,7 +101,7 @@ mod tests
 
                     ctx = execute_until_yields(&program, ctx, 1)?;
 
-                    check_pumps(&mut ctx, false, false, true, 108.);
+                    check_pumps(&mut ctx, false, false, true, 108.)?;
                 }
 
                 {
@@ -109,7 +109,7 @@ mod tests
 
                     ctx = execute_until_yields(&program, ctx, 1)?;
 
-                    check_pumps(&mut ctx, true, true, true, 108.);
+                    check_pumps(&mut ctx, true, true, true, 108.)?;
                 }
 
                 {
@@ -117,7 +117,7 @@ mod tests
 
                     ctx = execute_until_yields(&program, ctx, 1)?;
 
-                    check_pumps(&mut ctx, true, false, true, 108.);
+                    check_pumps(&mut ctx, true, false, true, 108.)?;
                 }
 
                 //
@@ -127,7 +127,7 @@ mod tests
 
                     ctx = execute_until_yields(&program, ctx, 1)?;
 
-                    check_pumps(&mut ctx, false, true, true, 130.);
+                    check_pumps(&mut ctx, false, true, true, 130.)?;
                 }
 
                 {
@@ -135,21 +135,21 @@ mod tests
 
                     ctx = execute_until_yields(&program, ctx, 1)?;
 
-                    check_pumps(&mut ctx, false, false, true, 130.);
+                    check_pumps(&mut ctx, false, false, true, 130.)?;
                 }
 
                 {
                     set_environment(&mut ctx, 125., 0.2, 900.0)?;
 
                     ctx = execute_until_yields2(&program, ctx, 1,
-                                                                    |ctx| {
+                                                                    |_ctx| {
                                                                         /*if ctx.instruction_pointer >16 && ctx.instruction_pointer < 21 {
                                                                             ctx.debug_dump();
                                                                         }*/
                                                                     }
                     )?;
 
-                    check_pumps(&mut ctx, false, true, false, -1.);
+                    check_pumps(&mut ctx, false, true, false, -1.)?;
                 }
 
                 {
@@ -157,7 +157,7 @@ mod tests
 
                     ctx = execute_until_yields(&program, ctx, 1)?;
 
-                    check_pumps(&mut ctx, false, false, false, -1.);
+                    check_pumps(&mut ctx, false, false, false, -1.)?;
                 }
 
                 //
@@ -167,7 +167,7 @@ mod tests
 
                     ctx = execute_until_yields(&program, ctx, 1)?;
 
-                    check_pumps(&mut ctx, true, false, false, 130.);
+                    check_pumps(&mut ctx, true, false, false, 130.)?;
                 }
 
                 {
@@ -175,7 +175,7 @@ mod tests
 
                     ctx = execute_until_yields(&program, ctx, 1)?;
 
-                    check_pumps(&mut ctx, true, false, true, 108.);
+                    check_pumps(&mut ctx, true, false, true, 108.)?;
                 }
 
                 {
@@ -183,7 +183,7 @@ mod tests
 
                     ctx = execute_until_yields(&program, ctx, 1)?;
 
-                    check_pumps(&mut ctx, true, true, false, 130.);
+                    check_pumps(&mut ctx, true, true, false, 130.)?;
                 }
 
                 {
@@ -191,7 +191,7 @@ mod tests
 
                     ctx = execute_until_yields(&program, ctx, 1)?;
 
-                    check_pumps(&mut ctx, true, true, true, 108.);
+                    check_pumps(&mut ctx, true, true, true, 108.)?;
                 }
 
 
