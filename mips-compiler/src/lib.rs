@@ -1224,6 +1224,8 @@ pub fn parse_one_line(line:&str) -> ParsedLine
                 ParsedLine::OpCode(Box::new(Yield {}))
             } else if "l" == opcode {
                 LoadDevice::new(parts).into()
+            } else if "ls" == opcode || "lr" == opcode {
+                ParsedLine::Err(CompileError { message: format!("{} unimplemented because I do not understand them yet", opcode)})
             } else if "move" == opcode {
                 Move::new(parts).into()
 
