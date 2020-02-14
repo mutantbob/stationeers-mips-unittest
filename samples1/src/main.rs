@@ -1,12 +1,3 @@
-use std::collections::HashMap;
-
-extern crate stationeers_mips_unittest;
-use stationeers_mips_unittest::*;
-
-static PROG1:&str = include_str!("prog1.mips");
-
-static PROG2:&str = include_str!("prog2.mips");
-
 fn main()
 {
     println!("maybe you want to `cargo test`");
@@ -16,7 +7,12 @@ fn main()
 
 mod tests
 {
-    use super::*;
+    extern crate stationeers_mips_unittest;
+    use stationeers_mips_unittest::*;
+
+    static PROG1:&str = include_str!("prog1.mips");
+
+    static PROG2:&str = include_str!("prog2.mips");
 
     #[test]
     fn test_prog1() ->Result<(), ExecutionError> {
