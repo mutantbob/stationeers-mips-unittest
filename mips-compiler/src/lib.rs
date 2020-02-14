@@ -149,6 +149,17 @@ impl CPUContext
         self.instruction_pointer+=1;
     }
 
+    pub fn get_ra(&self) -> f32
+    {
+        self.registers[self.registers.len()-1]
+    }
+
+    pub fn set_ra(&mut self, ptr:InstructionPointer)
+    {
+        let idx = self.registers.len() - 1;
+        self.registers[idx] = ptr as f32;
+    }
+
     pub fn jump(&mut self, line_number:InstructionPointer)
     {
         self.instruction_pointer = line_number;
@@ -1029,11 +1040,12 @@ pub struct BranchDevice
     dev: AliasOrDevice,
     target: LineNumber,
     predicate: Box<dyn Fn(&CPUContext, Device)->Result<bool,ExecutionError>>,
+    and_link: bool,
 }
 
 impl BranchDevice
 {
-    pub fn new<'a, I, F>(parts: I , op:F) -> Result<BranchDevice, CompileError>
+    pub fn new<'a, I, F>(parts: I , op:F, and_link: bool) -> Result<BranchDevice, CompileError>
         where I:Iterator<Item=&'a str>,
 //              F: Fn(f32,f32)->bool +'static
               F: Fn(&CPUContext, Device)->Result<bool,ExecutionError> +'static
@@ -1044,12 +1056,13 @@ impl BranchDevice
             dev: AliasOrDevice::parse(&arg1)?,
             target: LineNumber::parse(&target)?,
             predicate: Box::new(op),
+            and_link: and_link,
         })
     }
 
     pub fn device_not_set(ctx : &CPUContext, dev: Device) ->Result<bool,ExecutionError>
     {
-        println!("bdns ? {}", dev);
+        //println!("bdns ? {}", dev);
         match dev {
             Device::SpecialB => Ok(true),
             Device::Regular(idx) => {
@@ -1069,7 +1082,13 @@ impl BranchDevice
     pub fn bdns<'a,I>(parts:I) ->Result<BranchDevice, CompileError>
         where I:Iterator<Item=&'a str>
     {
-        BranchDevice::new(parts, BranchDevice::device_not_set)
+        BranchDevice::new(parts, BranchDevice::device_not_set, false)
+    }
+
+    pub fn bdnsal<'a,I>(parts:I) ->Result<BranchDevice, CompileError>
+        where I:Iterator<Item=&'a str>
+    {
+        BranchDevice::new(parts, BranchDevice::device_not_set, true)
     }
 }
 
@@ -1077,10 +1096,12 @@ impl Instruction for BranchDevice
 {
     fn execute(&self, mut ctx: CPUContext) -> Result<CPUContext, ExecutionError> {
         let dev = ctx.resolve_device(&self.dev)?;
+        ctx.ip_plus_one();
         if (self.predicate)(&ctx, dev)? {
+            if self.and_link {
+                ctx.set_ra(ctx.instruction_pointer);
+            }
             ctx.instruction_pointer = ctx.lookup(&self.target)?;
-        } else {
-            ctx.ip_plus_one();
         }
         Ok(ctx)
     }
@@ -1188,6 +1209,8 @@ pub fn parse_one_line(line:&str) -> ParsedLine
 
             } else if "bdns" == opcode {
                 BranchDevice::bdns(parts).into()
+            } else if "bdnsal" == opcode {
+                BranchDevice::bdnsal(parts).into()
 
             } else {
                 ParsedLine::Err(CompileError{message: format!("unrecognized opcode {}", opcode)})

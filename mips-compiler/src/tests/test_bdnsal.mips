@@ -1,0 +1,9 @@
+
+bdnsal d0 missing_device
+move r0 3
+j end
+
+missing_device:
+move r0 2
+
+end:
