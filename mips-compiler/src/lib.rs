@@ -270,13 +270,21 @@ impl CPUContext
         match self.device_reference(dev) {
             Ok(dev_state) => {
                 let maybe_val = dev_state.get(tag);
-                match maybe_val {
-                    None => Err(ExecutionError::new(&format!("{}[{}] has no value", dev, tag))),
-                    Some(&val) => {
-                        self.registers[reg.idx as usize] = val;
-                        self.ip_plus_one();
-                        Ok(())
+                if false {
+                    // the javascript simulator doesn't work like this.  It just loads 0
+                    match maybe_val {
+                        None => Err(ExecutionError::new(&format!("{}[{}] has no value", dev, tag))),
+                        Some(&val) => {
+                            self.registers[reg.idx as usize] = val;
+                            self.ip_plus_one();
+                            Ok(())
+                        }
                     }
+                } else {
+                    let val = maybe_val.unwrap_or(&0_f32);
+                    self.registers[reg.idx as usize] = *val;
+                    self.ip_plus_one();
+                    Ok(())
                 }
             },
             Err(e) => Err(e),

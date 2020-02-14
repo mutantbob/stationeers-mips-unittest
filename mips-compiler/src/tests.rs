@@ -153,6 +153,50 @@ pub fn test_brdse() -> Result<(),MultiError>
     Ok(())
 }
 
+//
+
+#[test]
+pub fn test_load1() -> Result<(),MultiError>
+{
+    let source = include_str!("tests/test_l.mips");
+    let program = compile(source)?;
+
+    let ctx = CPUContext::new_simple(&program);
+    assert!( execute_until_yields(&program, ctx, 99).is_err() , "should have failed");
+
+    Ok(())
+}
+
+#[test]
+pub fn test_load2() -> Result<(),MultiError>
+{
+    let source = include_str!("tests/test_l.mips");
+    let program = compile(source)?;
+
+    let mut ctx = CPUContext::new_simple(&program);
+    ctx.attach_device(0, DeviceStateBuilder::new().set("Bacon", 7.5).build())?;
+    ctx = execute_until_yields(&program, ctx, 99)?;
+    assert_eq!(ctx.register_reference(Register{idx:0})?, 7.5);
+
+    Ok(())
+}
+
+#[test]
+pub fn test_load3() -> Result<(),MultiError>
+{
+    let source = include_str!("tests/test_l.mips");
+    let program = compile(source)?;
+
+    let mut ctx = CPUContext::new_simple(&program);
+    ctx.attach_device(0, DeviceState::new())?;
+    ctx = execute_until_yields(&program, ctx, 99)?;
+    // XXX does the game really return 0 for fields that do not exist on a device?
+    assert_eq!(ctx.register_reference(Register{idx:0})?, 0.0);
+
+    Ok(())
+}
+
+//
 
 #[test]
 pub fn bad_register() -> Result<(), MultiError>
