@@ -1101,6 +1101,12 @@ impl BranchDevice
     {
         BranchDevice::new(parts, BranchDevice::device_attached, false)
     }
+
+    pub fn bdseal<'a,I>(parts:I) ->Result<BranchDevice, CompileError>
+        where I:Iterator<Item=&'a str>
+    {
+        BranchDevice::new(parts, BranchDevice::device_attached, true)
+    }
 }
 
 impl Instruction for BranchDevice
@@ -1224,6 +1230,8 @@ pub fn parse_one_line(line:&str) -> ParsedLine
                 BranchDevice::bdnsal(parts).into()
             } else if "bdse" == opcode {
                 BranchDevice::bdse(parts).into()
+            } else if "bdseal" == opcode {
+                BranchDevice::bdseal(parts).into()
 
             } else {
                 ParsedLine::Err(CompileError{message: format!("unrecognized opcode {}", opcode)})

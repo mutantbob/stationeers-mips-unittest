@@ -49,6 +49,7 @@ pub fn test_bdnsal() -> Result<(),MultiError>
         ctx.attach_device(0, DeviceState::new())?;
         ctx = execute_until_yields(&program, ctx, 99)?;
         assert_eq!(ctx.register_reference(Register{idx:0})?, 3.0);
+        assert!(ctx.get_ra().is_nan());
     }
     Ok(())
 }
@@ -78,6 +79,29 @@ pub fn test_bdse() -> Result<(),MultiError>
     Ok(())
 }
 
+// bdseal: branch if device not set and link
+#[test]
+pub fn test_bdseal() -> Result<(),MultiError>
+{
+    let source = include_str!("tests/test_bdseal.mips");
+
+    let program = compile(source)?;
+
+    {
+        let mut ctx = CPUContext::new_simple(&program);
+        ctx = execute_until_yields(&program, ctx, 99)?;
+        assert_eq!(ctx.register_reference(Register{idx:0})?, 4.0);
+        assert!(ctx.get_ra().is_nan());
+    }
+    {
+        let mut ctx = CPUContext::new_simple(&program);
+        ctx.attach_device(0, DeviceState::new())?;
+        ctx = execute_until_yields(&program, ctx, 99)?;
+        assert_eq!(ctx.register_reference(Register{idx:0})?, 5.0);
+        assert_eq!(ctx.get_ra(), 2.0);
+    }
+    Ok(())
+}
 #[test]
 pub fn bad_register() -> Result<(), MultiError>
 {
