@@ -324,7 +324,7 @@ impl CPUContext
 #[derive(Debug,Clone)]
 pub enum LineNumber
 {
-    Number(InstructionPointer),
+    Number(InstructionPointer),  // this can't be negative.  Should we allow that for relative branching?
     Label(String),
 }
 
@@ -1041,11 +1041,12 @@ pub struct BranchDevice
     target: LineNumber,
     predicate: Box<dyn Fn(&CPUContext, Device)->Result<bool,ExecutionError>>,
     and_link: bool,
+    relative: bool,
 }
 
 impl BranchDevice
 {
-    pub fn new<'a, I, F>(parts: I , op:F, and_link: bool) -> Result<BranchDevice, CompileError>
+    pub fn new<'a, I, F>(parts: I , op:F, and_link: bool, relative:bool) -> Result<BranchDevice, CompileError>
         where I:Iterator<Item=&'a str>,
 //              F: Fn(f32,f32)->bool +'static
               F: Fn(&CPUContext, Device)->Result<bool,ExecutionError> +'static
@@ -1057,6 +1058,7 @@ impl BranchDevice
             target: LineNumber::parse(&target)?,
             predicate: Box::new(op),
             and_link: and_link,
+            relative: relative,
         })
     }
 
@@ -1087,25 +1089,31 @@ impl BranchDevice
     pub fn bdns<'a,I>(parts:I) ->Result<BranchDevice, CompileError>
         where I:Iterator<Item=&'a str>
     {
-        BranchDevice::new(parts, BranchDevice::device_not_set, false)
+        BranchDevice::new(parts, BranchDevice::device_not_set, false, false)
     }
 
     pub fn bdnsal<'a,I>(parts:I) ->Result<BranchDevice, CompileError>
         where I:Iterator<Item=&'a str>
     {
-        BranchDevice::new(parts, BranchDevice::device_not_set, true)
+        BranchDevice::new(parts, BranchDevice::device_not_set, true, false)
     }
 
     pub fn bdse<'a,I>(parts:I) ->Result<BranchDevice, CompileError>
         where I:Iterator<Item=&'a str>
     {
-        BranchDevice::new(parts, BranchDevice::device_attached, false)
+        BranchDevice::new(parts, BranchDevice::device_attached, false, false)
     }
 
     pub fn bdseal<'a,I>(parts:I) ->Result<BranchDevice, CompileError>
         where I:Iterator<Item=&'a str>
     {
-        BranchDevice::new(parts, BranchDevice::device_attached, true)
+        BranchDevice::new(parts, BranchDevice::device_attached, true, false)
+    }
+
+    pub fn brdns<'a,I>(parts:I) ->Result<BranchDevice, CompileError>
+        where I:Iterator<Item=&'a str>
+    {
+        BranchDevice::new(parts, BranchDevice::device_not_set, false, true)
     }
 }
 
@@ -1118,7 +1126,12 @@ impl Instruction for BranchDevice
             if self.and_link {
                 ctx.set_ra(ctx.instruction_pointer);
             }
-            ctx.instruction_pointer = ctx.lookup(&self.target)?;
+            let target = ctx.lookup(&self.target)?;
+            if self.relative {
+                ctx.instruction_pointer = ctx.instruction_pointer - 1 + target;
+            } else {
+                ctx.instruction_pointer = target;
+            }
         }
         Ok(ctx)
     }
@@ -1232,6 +1245,8 @@ pub fn parse_one_line(line:&str) -> ParsedLine
                 BranchDevice::bdse(parts).into()
             } else if "bdseal" == opcode {
                 BranchDevice::bdseal(parts).into()
+            } else if "brdns" == opcode {
+                BranchDevice::brdns(parts).into()
 
             } else {
                 ParsedLine::Err(CompileError{message: format!("unrecognized opcode {}", opcode)})
