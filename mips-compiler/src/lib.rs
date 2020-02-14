@@ -1062,6 +1062,11 @@ impl BranchDevice
 
     pub fn device_not_set(ctx : &CPUContext, dev: Device) ->Result<bool,ExecutionError>
     {
+        return Ok(!BranchDevice::device_attached(ctx, dev)?);
+    }
+
+    pub fn device_attached(ctx : &CPUContext, dev: Device) ->Result<bool,ExecutionError>
+    {
         //println!("bdns ? {}", dev);
         match dev {
             Device::SpecialB => Ok(true),
@@ -1069,8 +1074,8 @@ impl BranchDevice
                 let urgh = ctx.devices.get(idx as usize);
                 match urgh {
                     Some(l2) => match l2 {
-                        Some(_) => Ok(false),
-                        None => Ok(true),
+                        Some(_) => Ok(true),
+                        None => Ok(false),
                     },
                     None => Err(ExecutionError::new(&format!("no such device slot d{}", idx))),
                 }
@@ -1089,6 +1094,12 @@ impl BranchDevice
         where I:Iterator<Item=&'a str>
     {
         BranchDevice::new(parts, BranchDevice::device_not_set, true)
+    }
+
+    pub fn bdse<'a,I>(parts:I) ->Result<BranchDevice, CompileError>
+        where I:Iterator<Item=&'a str>
+    {
+        BranchDevice::new(parts, BranchDevice::device_attached, false)
     }
 }
 
@@ -1211,6 +1222,8 @@ pub fn parse_one_line(line:&str) -> ParsedLine
                 BranchDevice::bdns(parts).into()
             } else if "bdnsal" == opcode {
                 BranchDevice::bdnsal(parts).into()
+            } else if "bdse" == opcode {
+                BranchDevice::bdse(parts).into()
 
             } else {
                 ParsedLine::Err(CompileError{message: format!("unrecognized opcode {}", opcode)})
