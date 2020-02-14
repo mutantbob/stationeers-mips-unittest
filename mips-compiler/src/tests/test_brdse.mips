@@ -1,0 +1,8 @@
+
+brdse d0 4
+move r0 4
+j end
+move r1 6
+move r0 5
+
+end:

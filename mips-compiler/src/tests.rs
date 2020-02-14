@@ -115,6 +115,7 @@ pub fn test_brdns() -> Result<(),MultiError>
         let mut ctx = CPUContext::new_simple(&program);
         ctx = execute_until_yields(&program, ctx, 99)?;
         assert_eq!(ctx.register_reference(Register{idx:0})?, 2.0);
+        assert!(ctx.register_reference(Register{idx:1})?.is_nan());
         assert!(ctx.get_ra().is_nan());
     }
     {
@@ -122,6 +123,31 @@ pub fn test_brdns() -> Result<(),MultiError>
         ctx.attach_device(0, DeviceState::new())?;
         ctx = execute_until_yields(&program, ctx, 99)?;
         assert_eq!(ctx.register_reference(Register{idx:0})?, 3.0);
+        assert!(ctx.get_ra().is_nan());
+    }
+    Ok(())
+}
+
+// brdse: branch relative if device set
+#[test]
+pub fn test_brdse() -> Result<(),MultiError>
+{
+    let source = include_str!("tests/test_brdse.mips");
+
+    let program = compile(source)?;
+
+    {
+        let mut ctx = CPUContext::new_simple(&program);
+        ctx = execute_until_yields(&program, ctx, 99)?;
+        assert_eq!(ctx.register_reference(Register{idx:0})?, 4.0);
+        assert!(ctx.get_ra().is_nan());
+    }
+    {
+        let mut ctx = CPUContext::new_simple(&program);
+        ctx.attach_device(0, DeviceState::new())?;
+        ctx = execute_until_yields(&program, ctx, 99)?;
+        assert_eq!(ctx.register_reference(Register{idx:0})?, 5.0);
+        assert!(ctx.register_reference(Register{idx:1})?.is_nan());
         assert!(ctx.get_ra().is_nan());
     }
     Ok(())
