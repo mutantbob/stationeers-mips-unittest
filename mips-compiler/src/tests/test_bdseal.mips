@@ -1,0 +1,9 @@
+
+bdseal d0 have_device
+move r0 4
+j end
+
+have_device:
+move r0 5
+
+end:

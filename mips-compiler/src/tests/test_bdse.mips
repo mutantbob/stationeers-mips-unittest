@@ -1,0 +1,18 @@
+
+bdse d0 have_device
+move r0 4
+j next
+
+have_device:
+move r0 5
+
+next:
+
+bdse db have_db
+move r1 7
+j end
+
+have_db:
+move r1 11
+
+end:

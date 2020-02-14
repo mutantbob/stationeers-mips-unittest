@@ -1,0 +1,8 @@
+
+brdns d0 4
+move r0 3
+j end
+
+move r0 2
+
+end:
