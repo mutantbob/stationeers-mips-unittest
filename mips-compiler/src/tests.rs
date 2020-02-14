@@ -199,6 +199,38 @@ pub fn test_load3() -> Result<(),MultiError>
 //
 
 #[test]
+pub fn test_store1() ->Result<(), MultiError>
+{
+    let source = include_str!("tests/test_s.mips");
+    let program = compile(source)?;
+
+    let ctx = CPUContext::new_simple(&program);
+    assert!( execute_until_yields(&program, ctx, 99).is_err(), "should have died on unlinked device");
+
+    Ok(())
+}
+
+#[test]
+pub fn test_store2() ->Result<(), MultiError>
+{
+    let source = include_str!("tests/test_s.mips");
+    let program = compile(source)?;
+
+    let mut ctx = CPUContext::new_simple(&program);
+    ctx.attach_device(0, DeviceState::new())?;
+    ctx = execute_until_yields(&program, ctx, 99)?;
+
+    let dev_state = ctx.device_reference(Device::Regular(0))?;
+    assert_eq!( *dev_state.get("Nyan").unwrap(), 9000_f32);
+    assert_eq!( *dev_state.get("Cake").unwrap(), 5.0);
+    assert_eq!( *dev_state.get("Price").unwrap(), 4.75);
+
+    Ok(())
+}
+
+//
+
+#[test]
 pub fn bad_register() -> Result<(), MultiError>
 {
 

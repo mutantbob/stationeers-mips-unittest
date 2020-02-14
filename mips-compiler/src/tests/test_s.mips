@@ -1,0 +1,8 @@
+define Cat 9000
+alias bacon r2
+
+move r2 5
+
+s d0 Nyan Cat
+s d0 Cake bacon
+s d0 Price 4.75
