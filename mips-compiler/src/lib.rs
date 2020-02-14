@@ -1016,6 +1016,12 @@ impl Branch
         })
     }
 
+    pub fn eq<'a, I>(parts:I) -> Result<Branch, CompileError>
+        where I:Iterator<Item=&'a str>
+    {
+        Branch::new(parts, |a,b| a==b)
+    }
+
     pub fn gt<'a, I>(parts:I) -> Result<Branch, CompileError>
         where I:Iterator<Item=&'a str>
     {
@@ -1329,7 +1335,12 @@ pub fn parse_one_line(line:&str) -> ParsedLine
                 BranchTernary::bap(parts).into()
             } else if "bapal" == opcode {
                 BranchTernary::bapal(parts).into()
+            } else if "bapz" == opcode || "bapzal" == opcode {
+                ParsedLine::Err(CompileError { message: format!("{} unimplemented because in-game documentation is defective", opcode)})
 
+
+            } else if "beq" == opcode {
+                Branch::eq(parts).into()
             } else if "bgt" == opcode {
                 Branch::gt(parts).into()
 
