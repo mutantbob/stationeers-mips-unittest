@@ -14,8 +14,11 @@ mod tests
 
     static PROG2:&str = include_str!("prog2.mips");
 
+    /// This test was mostly to drive implementation of the various opcodes
+    /// and other MIPS features.  It is far from comprehensive
     #[test]
-    fn test_prog1() ->Result<(), ExecutionError> {
+    fn test_prog1() ->Result<(), ExecutionError>
+    {
 
         let prog1 = compile(PROG1);
         match prog1 {
@@ -40,8 +43,13 @@ mod tests
         Ok(())
     }
 
+    /// This is a unit test for a Loulan greenhouse CO2/pressure
+    /// management system. The tests encode my desired behavior of
+    /// the system under various combinations of greenhouse
+    /// pressure, CO2 concentration, and pipe pressure.
     #[test]
-    fn test_prog2() ->Result<(), ExecutionError> {
+    fn test_prog2() ->Result<(), ExecutionError>
+    {
 
         fn set_environment(ctx:&mut CPUContext, gh_pressure:f32, gh_co2:f32, pipe_pressure:f32) ->Result<(), ExecutionError>
         {
@@ -90,33 +98,25 @@ mod tests
 
                 {
                     set_environment(&mut ctx, 90., 0.02, 900.0)?;
-
                     ctx = execute_until_yields(&program, ctx, 1)?;
-
                     check_pumps(&mut ctx, false, true, true, 108.)?;
                 }
 
                 {
                     set_environment(&mut ctx, 90., 0.02, 4000.0)?;
-
                     ctx = execute_until_yields(&program, ctx, 1)?;
-
                     check_pumps(&mut ctx, false, false, true, 108.)?;
                 }
 
                 {
                     set_environment(&mut ctx, 125., 0.02, 900.0)?;
-
                     ctx = execute_until_yields(&program, ctx, 1)?;
-
                     check_pumps(&mut ctx, true, true, true, 108.)?;
                 }
 
                 {
                     set_environment(&mut ctx, 125., 0.02, 4000.0)?;
-
                     ctx = execute_until_yields(&program, ctx, 1)?;
-
                     check_pumps(&mut ctx, true, false, true, 108.)?;
                 }
 
@@ -124,23 +124,18 @@ mod tests
 
                 {
                     set_environment(&mut ctx, 90., 0.2, 900.0)?;
-
                     ctx = execute_until_yields(&program, ctx, 1)?;
-
                     check_pumps(&mut ctx, false, true, true, 130.)?;
                 }
 
                 {
                     set_environment(&mut ctx, 90., 0.2, 4000.0)?;
-
                     ctx = execute_until_yields(&program, ctx, 1)?;
-
                     check_pumps(&mut ctx, false, false, true, 130.)?;
                 }
 
                 {
                     set_environment(&mut ctx, 125., 0.2, 900.0)?;
-
                     ctx = execute_until_yields2(&program, ctx, 1,
                                                                     |_ctx| {
                                                                         /*if ctx.instruction_pointer >16 && ctx.instruction_pointer < 21 {
@@ -148,15 +143,12 @@ mod tests
                                                                         }*/
                                                                     }
                     )?;
-
                     check_pumps(&mut ctx, false, true, false, -1.)?;
                 }
 
                 {
                     set_environment(&mut ctx, 125., 0.2, 4000.0)?;
-
                     ctx = execute_until_yields(&program, ctx, 1)?;
-
                     check_pumps(&mut ctx, false, false, false, -1.)?;
                 }
 
@@ -164,33 +156,25 @@ mod tests
 
                 {
                     set_environment(&mut ctx, 132., 0.2, 4000.0)?;
-
                     ctx = execute_until_yields(&program, ctx, 1)?;
-
                     check_pumps(&mut ctx, true, false, false, 130.)?;
                 }
 
                 {
                     set_environment(&mut ctx, 132., 0.03, 4000.0)?;
-
                     ctx = execute_until_yields(&program, ctx, 1)?;
-
                     check_pumps(&mut ctx, true, false, true, 108.)?;
                 }
 
                 {
                     set_environment(&mut ctx, 132., 0.2, 200.0)?;
-
                     ctx = execute_until_yields(&program, ctx, 1)?;
-
                     check_pumps(&mut ctx, true, true, false, 130.)?;
                 }
 
                 {
                     set_environment(&mut ctx, 132., 0.03, 200.0)?;
-
                     ctx = execute_until_yields(&program, ctx, 1)?;
-
                     check_pumps(&mut ctx, true, true, true, 108.)?;
                 }
 
