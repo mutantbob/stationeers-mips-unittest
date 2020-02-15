@@ -339,20 +339,27 @@ pub fn test_bapal3() ->Result<(), MultiError>
 
 //
 
+/// check that the program when run with r0=a; r1=b; finishes with r9==expected
+pub fn check_binary_operator_019(program:&CompiledProgram, a:f32, b:f32, expected:f32) ->Result<(), MultiError>
+{
+
+    let mut ctx = CPUContext::new_simple(&program);
+    *ctx.register_reference_mut(Register{idx:0})? = a;
+    *ctx.register_reference_mut(Register{idx:1})? = b;
+    ctx = execute_until_yields(&program, ctx, 99)?;
+
+    assert_eq!(ctx.register_reference(Register{idx:9})?, expected);
+
+    Ok(())
+}
+
 #[test]
 pub fn test_beq1() ->Result<(), MultiError>
 {
     let source = include_str!("tests/test_beq.mips");
     let program = compile(source)?;
 
-    let mut ctx = CPUContext::new_simple(&program);
-    *ctx.register_reference_mut(Register{idx:0})? = -3.0;
-    *ctx.register_reference_mut(Register{idx:1})? = -3.01;
-    ctx = execute_until_yields(&program, ctx, 99)?;
-
-    assert_eq!(ctx.register_reference(Register{idx:9})?, 7.0);
-
-    Ok(())
+    check_binary_operator_019(&program, -3.0, -3.01, 7.0)
 }
 
 #[test]
@@ -361,14 +368,7 @@ pub fn test_beq2() ->Result<(), MultiError>
     let source = include_str!("tests/test_beq.mips");
     let program = compile(source)?;
 
-    let mut ctx = CPUContext::new_simple(&program);
-    *ctx.register_reference_mut(Register{idx:0})? = -3.0;
-    *ctx.register_reference_mut(Register{idx:1})? = -3.0;
-    ctx = execute_until_yields(&program, ctx, 99)?;
-
-    assert_eq!(ctx.register_reference(Register{idx:9})?, 42.0);
-
-    Ok(())
+    check_binary_operator_019(&program, -3.0, -3.0, 42.0)
 }
 
 //
@@ -379,15 +379,7 @@ pub fn test_beqal1() ->Result<(), MultiError>
     let source = include_str!("tests/test_beqal.mips");
     let program = compile(source)?;
 
-    let mut ctx = CPUContext::new_simple(&program);
-    *ctx.register_reference_mut(Register{idx:0})? = 2.0;
-    *ctx.register_reference_mut(Register{idx:1})? = -3.0;
-    ctx = execute_until_yields(&program, ctx, 99)?;
-
-    assert_eq!(ctx.register_reference(Register{idx:9})?, 7.0);
-    assert!(ctx.get_ra().is_nan());
-
-    Ok(())
+    check_binary_operator_019(&program, 2.0, -3.0, 7.0)
 }
 
 #[test]
@@ -396,15 +388,16 @@ pub fn test_beqal2() ->Result<(), MultiError>
     let source = include_str!("tests/test_beqal.mips");
     let program = compile(source)?;
 
-    let mut ctx = CPUContext::new_simple(&program);
-    *ctx.register_reference_mut(Register{idx:0})? = -3.0;
-    *ctx.register_reference_mut(Register{idx:1})? = -3.0;
-    ctx = execute_until_yields(&program, ctx, 99)?;
+    check_binary_operator_019(&program, -3.0, -3.0, 42.0)
+}
 
-    assert_eq!(ctx.register_reference(Register{idx:9})?, 42.0);
-    assert_eq!(ctx.get_ra(), 1.0);
+#[test]
+pub fn test_beqal3() ->Result<(), MultiError>
+{
+    let source = include_str!("tests/test_beqal.mips");
+    let program = compile(source)?;
 
-    Ok(())
+    check_binary_operator_019(&program, 2.0, 5.0, 7.0)
 }
 
 //
