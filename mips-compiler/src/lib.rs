@@ -992,17 +992,25 @@ impl Instruction for TernaryOperator
 
 //
 
+pub enum JumpStyle
+{
+    Abs,
+    Rel,
+    AL, // ? and link
+}
+
 pub struct Branch
 {
     arg1: RValue,
     arg2: RValue,
     target: LineNumber,
     op: Box<dyn Fn(f32,f32)->bool>,
+    style: JumpStyle,
 }
 
 impl Branch
 {
-    pub fn new<'a, I, F>(parts: I , op:F) -> Result<Branch, CompileError>
+    pub fn new<'a, I, F>(parts: I , op:F, style:JumpStyle) -> Result<Branch, CompileError>
         where I:Iterator<Item=&'a str>,
               F: Fn(f32,f32)->bool +'static
     {
@@ -1013,19 +1021,26 @@ impl Branch
             arg2: RValue::parse(&arg2)?,
             target: LineNumber::parse(&target)?,
             op: Box::new(op),
+            style:style,
         })
     }
 
     pub fn eq<'a, I>(parts:I) -> Result<Branch, CompileError>
         where I:Iterator<Item=&'a str>
     {
-        Branch::new(parts, |a,b| a==b)
+        Branch::new(parts, |a,b| a==b, JumpStyle::Abs)
+    }
+
+    pub fn eqal<'a, I>(parts:I) -> Result<Branch, CompileError>
+        where I:Iterator<Item=&'a str>
+    {
+        Branch::new(parts, |a,b| a==b, JumpStyle::AL)
     }
 
     pub fn gt<'a, I>(parts:I) -> Result<Branch, CompileError>
         where I:Iterator<Item=&'a str>
     {
-        Branch::new(parts, |a,b| a>b)
+        Branch::new(parts, |a,b| a>b, JumpStyle::Abs)
     }
 
 }
@@ -1039,7 +1054,15 @@ impl Instruction for Branch
 
         let result = (self.op)(a,b);
         if result {
-            ctx.instruction_pointer = ctx.lookup(&self.target)?;
+            let target = ctx.lookup(&self.target)?;
+            ctx.instruction_pointer = match self.style {
+                JumpStyle::Abs => target,
+                JumpStyle::AL => {
+                    ctx.set_ra(ctx.instruction_pointer+1);
+                    target
+                },
+                JumpStyle::Rel => ctx.instruction_pointer+target
+            }
         } else {
             ctx.instruction_pointer += 1;
         }
@@ -1338,9 +1361,10 @@ pub fn parse_one_line(line:&str) -> ParsedLine
             } else if "bapz" == opcode || "bapzal" == opcode {
                 ParsedLine::Err(CompileError { message: format!("{} unimplemented because in-game documentation is defective", opcode)})
 
-
             } else if "beq" == opcode {
                 Branch::eq(parts).into()
+            } else if "beqal" == opcode {
+                Branch::eqal(parts).into()
             } else if "bgt" == opcode {
                 Branch::gt(parts).into()
 

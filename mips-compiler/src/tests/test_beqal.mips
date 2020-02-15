@@ -1,0 +1,6 @@
+beqal r0 r1 over
+move r9 7
+j end
+over:
+move r9 42
+end:
