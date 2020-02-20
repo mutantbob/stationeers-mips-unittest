@@ -431,6 +431,19 @@ pub fn test_abs() -> Result<(), MultiError>
 //
 
 #[test]
+pub fn test_add() -> Result<(), MultiError>
+{
+    let source = include_str!("tests/test_add.mips");
+    let program = compile(source)?;
+
+    check_binary_operator_019(&program, 2.0, 2.5, 4.5)?;
+
+    check_binary_operator_019(&program, 3.0, -1.0, 2.0)
+}
+
+//
+
+#[test]
 pub fn bad_register() -> Result<(), MultiError>
 {
 
