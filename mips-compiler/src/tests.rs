@@ -454,6 +454,15 @@ pub fn test_add() -> Result<(), MultiError>
 }
 
 #[test]
+pub fn test_exp() -> Result<(), MultiError>
+{
+    let source = include_str!("tests/test_exp.mips");
+    let program = compile(source)?;
+
+    check_unary_operator_09(&program, 2.0, 2.0_f32.exp())
+}
+
+#[test]
 pub fn test_div() -> Result<(), MultiError>
 {
     let source = include_str!("tests/test_div.mips");
