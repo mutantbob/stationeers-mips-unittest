@@ -527,6 +527,17 @@ pub fn test_min() -> Result<(), MultiError>
     check_binary_operator_019(&program, 3.0, -1.0, -1.0)
 }
 
+#[test]
+pub fn test_mod() -> Result<(), MultiError>
+{
+    let source = include_str!("tests/test_mod.mips");
+    let program = compile(source)?;
+
+    check_binary_operator_019(&program, 2.0, 2.5, 2.0)?;
+    check_binary_operator_019(&program, 7.1, 2.5, 2.1)?;
+    check_binary_operator_019(&program, 3.25, 1.25, 0.75)
+}
+
 //
 
 #[test]
