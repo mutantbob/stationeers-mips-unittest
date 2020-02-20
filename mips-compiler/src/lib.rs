@@ -1,6 +1,8 @@
 use std::collections::HashMap;
 use std::fmt::{Formatter, Error};
 
+extern crate rand;
+
 pub type InstructionPointer = u16;
 
 pub type DeviceState = HashMap<String, f32>;
@@ -645,6 +647,19 @@ impl Instruction for Jump
 
 //
 
+pub fn expect_1<'a, I>(mut parts: I) -> Result<String, CompileError>
+    where I:Iterator<Item=&'a str>
+{
+    let one = parts.next();
+    let doom = parts.next();
+
+    if let (Some(one), None) = (one, doom) {
+        Ok(one.to_string())
+    } else {
+        Err(CompileError{ message: "expected 2 arguments".to_string()})
+    }
+}
+
 pub fn expect_2<'a, I>(mut parts: I) -> Result<(String, String), CompileError>
     where I:Iterator<Item=&'a str>
 {
@@ -1065,6 +1080,36 @@ impl Instruction for TernaryOperator
 
 //
 
+pub struct Random
+{
+    l_value: LValue,
+}
+
+impl Random
+{
+    pub fn new<'a, I>(parts: I) -> Result<Random, CompileError>
+        where I:Iterator<Item=&'a str>
+    {
+        let l_value = expect_1(parts)?;
+
+        Ok(Random {
+            l_value: LValue::parse(&l_value)?,
+        })
+    }
+}
+
+impl Instruction for Random
+{
+    fn execute(&self, mut ctx: CPUContext) -> Result<CPUContext, ExecutionError> {
+        let x = ctx.resolve_l_value(&self.l_value)?;
+        *ctx.register_reference_mut(x)? = rand::random::<f32>();
+
+        Ok(ctx)
+    }
+}
+
+//
+
 pub enum JumpStyle
 {
     Abs,
@@ -1431,6 +1476,9 @@ pub fn parse_one_line(line:&str) -> ParsedLine
                 BinaryOperator::max(parts).into()
             } else if "min" == opcode {
                 BinaryOperator::min(parts).into()
+
+            } else if "rand" == opcode {
+                Random::new(parts).into()
 
             } else if "slt" == opcode {
                 BinaryOperator::slt(parts).into()

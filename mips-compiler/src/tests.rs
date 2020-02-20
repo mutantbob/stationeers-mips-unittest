@@ -538,6 +538,26 @@ pub fn test_mod() -> Result<(), MultiError>
     check_binary_operator_019(&program, 3.25, 1.25, 0.75)
 }
 
+#[test]
+pub fn test_rand() ->Result<(), MultiError>
+{
+    let source = include_str!("tests/test_rand.mips");
+    let program = compile(source)?;
+
+    for _i in 0..10 {
+
+        let mut ctx = CPUContext::new_simple(&program);
+        ctx = execute_until_yields(&program, ctx, 99)?;
+
+        let val = ctx.register_reference(Register{idx:0})?;
+        let good = 0.0 <= val && val<1.0;
+        assert!(good, format!("random number {} outside acceptable range [0..1)", val));
+
+    }
+
+    Ok(())
+}
+
 //
 
 #[test]
