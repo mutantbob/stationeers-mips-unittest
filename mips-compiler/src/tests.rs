@@ -454,6 +454,17 @@ pub fn test_add() -> Result<(), MultiError>
 }
 
 #[test]
+pub fn test_div() -> Result<(), MultiError>
+{
+    let source = include_str!("tests/test_div.mips");
+    let program = compile(source)?;
+
+    check_binary_operator_019(&program, 7.5, 2.5, 3.0)?;
+
+    check_binary_operator_019(&program, 3.0, -2.0, -1.5)
+}
+
+#[test]
 pub fn test_mul() -> Result<(), MultiError>
 {
     let source = include_str!("tests/test_mul.mips");
