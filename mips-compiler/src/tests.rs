@@ -461,6 +461,17 @@ pub fn test_log() -> Result<(), MultiError>
     check_unary_operator_09(&program, 2.0, 2.0_f32.ln())
 }
 
+#[test]
+pub fn test_round() -> Result<(), MultiError>
+{
+    let source = include_str!("tests/test_round.mips");
+    let program = compile(source)?;
+
+    check_unary_operator_09(&program, 2.5, 2.0)?;
+    check_unary_operator_09(&program, 3.5, 4.0)?;
+    check_unary_operator_09(&program, 3.4, 3.0)
+}
+
 //
 
 #[test]

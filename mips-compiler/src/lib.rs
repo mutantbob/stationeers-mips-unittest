@@ -2,6 +2,7 @@ use std::collections::HashMap;
 use std::fmt::{Formatter, Error};
 
 extern crate rand;
+extern crate math;
 
 pub type InstructionPointer = u16;
 
@@ -919,6 +920,12 @@ impl UnaryOperator
     {
         UnaryOperator::new(parts, |a| a.ln())
     }
+
+    pub fn round<'a, I>(parts:I) -> Result<UnaryOperator, CompileError>
+        where I:Iterator<Item=&'a str>
+    {
+        UnaryOperator::new(parts, |a| math::round::half_to_even(a as f64, 0) as f32)
+    }
 }
 
 impl Instruction for UnaryOperator
@@ -1461,6 +1468,8 @@ pub fn parse_one_line(line:&str) -> ParsedLine
                 UnaryOperator::floor(parts).into()
             } else if "log" == opcode {
                 UnaryOperator::log(parts).into()
+            } else if "round" == opcode {
+                UnaryOperator::round(parts).into()
 
             } else if "sub" == opcode {
                 BinaryOperator::sub(parts).into()
