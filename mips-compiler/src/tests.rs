@@ -602,6 +602,20 @@ pub fn test_sub() -> Result<(), MultiError>
 //
 
 #[test]
+pub fn test_and() -> Result<(), MultiError>
+{
+    let source = include_str!("tests/test_and.mips");
+    let program = compile(source)?;
+
+    check_binary_operator_019(&program, 0.0, 0.3, 0.0)?;
+    check_binary_operator_019(&program, 2.0, 0.3, 1.0)?;
+    check_binary_operator_019(&program, 0.0, 0.0, 0.0)?;
+    check_binary_operator_019(&program, 4.0, 0.0, 0.0)
+}
+
+//
+
+#[test]
 pub fn bad_register() -> Result<(), MultiError>
 {
 

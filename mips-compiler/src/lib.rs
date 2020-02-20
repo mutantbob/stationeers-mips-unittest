@@ -1032,6 +1032,11 @@ impl BinaryOperator
         BinaryOperator::new(parts, |a,b| if a>b { 1.0 } else {0.0} )
     }
 
+    pub fn and<'a, I>(parts:I) -> Result<BinaryOperator, CompileError>
+        where I:Iterator<Item=&'a str>
+    {
+        BinaryOperator::new(parts, |a,b| if (a!=0.0) && (b!=0.0) { 1.0 } else { 0.0 } )
+    }
 }
 
 impl Instruction for BinaryOperator
@@ -1539,6 +1544,9 @@ pub fn parse_one_line(line:&str) -> ParsedLine
                 BranchDevice::brdns(parts).into()
             } else if "brdse" == opcode {
                 BranchDevice::brdse(parts).into()
+
+            } else if "and" == opcode {
+                BinaryOperator::and(parts).into()
 
             } else {
                 ParsedLine::Err(CompileError{message: format!("unrecognized opcode {}", opcode)})
