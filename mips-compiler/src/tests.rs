@@ -579,6 +579,16 @@ pub fn test_rand() ->Result<(), MultiError>
     Ok(())
 }
 
+#[test]
+pub fn test_sub() -> Result<(), MultiError>
+{
+    let source = include_str!("tests/test_sub.mips");
+    let program = compile(source)?;
+
+    check_binary_operator_019(&program, 2.0, 2.5, -0.5)?;
+    check_binary_operator_019(&program, 2.1, 7.5, 2.1-7.5)
+}
+
 //
 
 #[test]
