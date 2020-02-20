@@ -932,6 +932,12 @@ impl UnaryOperator
     {
         UnaryOperator::new(parts, |a| a.sqrt() )
     }
+
+    pub fn trunc<'a, I>(parts:I) -> Result<UnaryOperator, CompileError>
+        where I:Iterator<Item=&'a str>
+    {
+        UnaryOperator::new(parts, |a| a.trunc() )
+    }
 }
 
 impl Instruction for UnaryOperator
@@ -1478,6 +1484,8 @@ pub fn parse_one_line(line:&str) -> ParsedLine
                 UnaryOperator::round(parts).into()
             } else if "sqrt" == opcode {
                 UnaryOperator::sqrt(parts).into()
+            } else if "trunc" == opcode {
+                UnaryOperator::trunc(parts).into()
 
             } else if "sub" == opcode {
                 BinaryOperator::sub(parts).into()

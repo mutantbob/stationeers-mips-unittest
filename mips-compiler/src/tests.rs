@@ -482,6 +482,16 @@ pub fn test_sqrt() -> Result<(), MultiError>
     check_unary_operator_09(&program, 49., 7.0)
 }
 
+#[test]
+pub fn test_trunc() -> Result<(), MultiError>
+{
+    let source = include_str!("tests/test_trunc.mips");
+    let program = compile(source)?;
+
+    check_unary_operator_09(&program, 6.75, 6.0)?;
+    check_unary_operator_09(&program, -3.7, -3.)
+}
+
 //
 
 #[test]
