@@ -926,6 +926,12 @@ impl BinaryOperator
         BinaryOperator::new(parts, |a,b| a+b)
     }
 
+    pub fn multiply<'a, I>(parts:I) -> Result<BinaryOperator, CompileError>
+        where I:Iterator<Item=&'a str>
+    {
+        BinaryOperator::new(parts, |a,b| a*b)
+    }
+
     pub fn sub<'a, I>(parts:I) -> Result<BinaryOperator, CompileError>
         where I:Iterator<Item=&'a str>
     {
@@ -1387,6 +1393,8 @@ pub fn parse_one_line(line:&str) -> ParsedLine
                 BinaryOperator::div(parts).into()
             } else if "mod" == opcode {
                 BinaryOperator::modulus(parts).into()
+            } else if "mul" == opcode {
+                BinaryOperator::multiply(parts).into()
             } else if "max" == opcode {
                 BinaryOperator::max(parts).into()
             } else if "min" == opcode {
