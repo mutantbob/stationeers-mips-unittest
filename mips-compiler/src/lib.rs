@@ -853,6 +853,49 @@ impl Instruction for Move
 
 //
 
+pub struct UnaryOperator
+{
+    l_value: LValue,
+    arg1: RValue,
+    op: Box<dyn Fn(f32)->f32>,
+}
+
+impl UnaryOperator
+{
+    pub fn new<'a, I, F>(parts: I , op:F) -> Result<UnaryOperator, CompileError>
+        where I:Iterator<Item=&'a str>,
+              F: Fn(f32)->f32 +'static
+    {
+        let (l_value, arg1) = expect_2(parts)?;
+
+        Ok(UnaryOperator{
+            l_value: LValue::parse(&l_value)?,
+            arg1: RValue::parse(&arg1)?,
+            op: Box::new(op),
+        })
+    }
+
+    pub fn abs<'a, I>(parts:I) -> Result<UnaryOperator, CompileError>
+        where I:Iterator<Item=&'a str>
+    {
+        UnaryOperator::new(parts, |a| a.abs())
+    }
+}
+
+impl Instruction for UnaryOperator
+{
+    fn execute(&self, mut ctx: CPUContext) -> Result<CPUContext, ExecutionError>
+    {
+        let a = ctx.resolve_r_value(&self.arg1)?;
+        let dst = ctx.register_reference_mut(ctx.resolve_l_value(&self.l_value)?)?;
+        *dst = (self.op)(a);
+        ctx.ip_plus_one();
+        Ok(ctx)
+    }
+}
+
+//
+
 pub struct BinaryOperator
 {
     l_value: LValue,
@@ -1332,6 +1375,9 @@ pub fn parse_one_line(line:&str) -> ParsedLine
                 ParsedLine::Err(CompileError { message: format!("{} unimplemented because I do not understand them yet", opcode)})
             } else if "move" == opcode {
                 Move::new(parts).into()
+
+            } else if "abs" == opcode {
+                UnaryOperator::abs(parts).into()
 
             } else if "sub" == opcode {
                 BinaryOperator::sub(parts).into()

@@ -353,6 +353,21 @@ pub fn check_binary_operator_019(program:&CompiledProgram, a:f32, b:f32, expecte
     Ok(())
 }
 
+/// check that the program when run with r0=a; finishes with r9==expected
+pub fn check_unary_operator_09(program:&CompiledProgram, a:f32, expected:f32) ->Result<(), MultiError>
+{
+
+    let mut ctx = CPUContext::new_simple(&program);
+    *ctx.register_reference_mut(Register{idx:0})? = a;
+    ctx = execute_until_yields(&program, ctx, 99)?;
+
+    assert_eq!(ctx.register_reference(Register{idx:9})?, expected);
+
+    Ok(())
+}
+
+//
+
 #[test]
 pub fn test_beq1() ->Result<(), MultiError>
 {
@@ -398,6 +413,19 @@ pub fn test_beqal3() ->Result<(), MultiError>
     let program = compile(source)?;
 
     check_binary_operator_019(&program, 2.0, 5.0, 7.0)
+}
+
+//
+
+#[test]
+pub fn test_abs() -> Result<(), MultiError>
+{
+    let source = include_str!("tests/test_abs.mips");
+    let program = compile(source)?;
+
+    check_unary_operator_09(&program, 2.0, 2.0)?;
+
+    check_unary_operator_09(&program, -1.3, 1.3)
 }
 
 //
