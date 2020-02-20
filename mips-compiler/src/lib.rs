@@ -892,6 +892,12 @@ impl UnaryOperator
     {
         UnaryOperator::new(parts, |a| a.exp())
     }
+
+    pub fn floor<'a, I>(parts:I) -> Result<UnaryOperator, CompileError>
+        where I:Iterator<Item=&'a str>
+    {
+        UnaryOperator::new(parts, |a| a.floor())
+    }
 }
 
 impl Instruction for UnaryOperator
@@ -1400,6 +1406,8 @@ pub fn parse_one_line(line:&str) -> ParsedLine
                 UnaryOperator::ceil(parts).into()
             } else if "exp" == opcode {
                 UnaryOperator::exp(parts).into()
+            } else if "floor" == opcode {
+                UnaryOperator::floor(parts).into()
 
             } else if "sub" == opcode {
                 BinaryOperator::sub(parts).into()

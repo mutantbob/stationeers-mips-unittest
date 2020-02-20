@@ -440,6 +440,18 @@ pub fn test_ceil() -> Result<(), MultiError>
     check_unary_operator_09(&program, -7., -7.)
 }
 
+#[test]
+pub fn test_floor() -> Result<(), MultiError>
+{
+    let source = include_str!("tests/test_floor.mips");
+    let program = compile(source)?;
+
+    check_unary_operator_09(&program, 2.0, 2.0)?;
+    check_unary_operator_09(&program, 2.1, 2.0)?;
+    check_unary_operator_09(&program, -1.3, -2.)?;
+    check_unary_operator_09(&program, -7., -7.)
+}
+
 //
 
 #[test]
