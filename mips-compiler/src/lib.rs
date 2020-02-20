@@ -880,6 +880,12 @@ impl UnaryOperator
     {
         UnaryOperator::new(parts, |a| a.abs())
     }
+
+    pub fn ceil<'a, I>(parts:I) -> Result<UnaryOperator, CompileError>
+        where I:Iterator<Item=&'a str>
+    {
+        UnaryOperator::new(parts, |a| a.ceil())
+    }
 }
 
 impl Instruction for UnaryOperator
@@ -1384,6 +1390,8 @@ pub fn parse_one_line(line:&str) -> ParsedLine
 
             } else if "abs" == opcode {
                 UnaryOperator::abs(parts).into()
+            } else if "ceil" == opcode {
+                UnaryOperator::ceil(parts).into()
 
             } else if "sub" == opcode {
                 BinaryOperator::sub(parts).into()
