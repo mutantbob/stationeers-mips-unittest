@@ -926,6 +926,12 @@ impl UnaryOperator
     {
         UnaryOperator::new(parts, |a| math::round::half_to_even(a as f64, 0) as f32)
     }
+
+    pub fn sqrt<'a, I>(parts:I) -> Result<UnaryOperator, CompileError>
+        where I:Iterator<Item=&'a str>
+    {
+        UnaryOperator::new(parts, |a| a.sqrt() )
+    }
 }
 
 impl Instruction for UnaryOperator
@@ -1470,6 +1476,8 @@ pub fn parse_one_line(line:&str) -> ParsedLine
                 UnaryOperator::log(parts).into()
             } else if "round" == opcode {
                 UnaryOperator::round(parts).into()
+            } else if "sqrt" == opcode {
+                UnaryOperator::sqrt(parts).into()
 
             } else if "sub" == opcode {
                 BinaryOperator::sub(parts).into()

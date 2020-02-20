@@ -472,6 +472,16 @@ pub fn test_round() -> Result<(), MultiError>
     check_unary_operator_09(&program, 3.4, 3.0)
 }
 
+#[test]
+pub fn test_sqrt() -> Result<(), MultiError>
+{
+    let source = include_str!("tests/test_sqrt.mips");
+    let program = compile(source)?;
+
+    check_unary_operator_09(&program, 6.25, 2.5)?;
+    check_unary_operator_09(&program, 49., 7.0)
+}
+
 //
 
 #[test]
