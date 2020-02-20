@@ -452,6 +452,15 @@ pub fn test_floor() -> Result<(), MultiError>
     check_unary_operator_09(&program, -7., -7.)
 }
 
+#[test]
+pub fn test_log() -> Result<(), MultiError>
+{
+    let source = include_str!("tests/test_log.mips");
+    let program = compile(source)?;
+
+    check_unary_operator_09(&program, 2.0, 2.0_f32.ln())
+}
+
 //
 
 #[test]

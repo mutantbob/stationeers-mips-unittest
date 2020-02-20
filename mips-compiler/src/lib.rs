@@ -898,6 +898,12 @@ impl UnaryOperator
     {
         UnaryOperator::new(parts, |a| a.floor())
     }
+
+    pub fn log<'a, I>(parts:I) -> Result<UnaryOperator, CompileError>
+        where I:Iterator<Item=&'a str>
+    {
+        UnaryOperator::new(parts, |a| a.ln())
+    }
 }
 
 impl Instruction for UnaryOperator
@@ -1408,6 +1414,8 @@ pub fn parse_one_line(line:&str) -> ParsedLine
                 UnaryOperator::exp(parts).into()
             } else if "floor" == opcode {
                 UnaryOperator::floor(parts).into()
+            } else if "log" == opcode {
+                UnaryOperator::log(parts).into()
 
             } else if "sub" == opcode {
                 BinaryOperator::sub(parts).into()
