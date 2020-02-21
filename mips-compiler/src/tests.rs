@@ -613,6 +613,42 @@ pub fn test_and() -> Result<(), MultiError>
     check_binary_operator_019(&program, 4.0, 0.0, 0.0)
 }
 
+#[test]
+pub fn test_nor() -> Result<(), MultiError>
+{
+    let source = include_str!("tests/test_nor.mips");
+    let program = compile(source)?;
+
+    check_binary_operator_019(&program, 0.0, 0.3, 0.0)?;
+    check_binary_operator_019(&program, 2.0, 0.3, 0.0)?;
+    check_binary_operator_019(&program, 0.0, 0.0, 1.0)?;
+    check_binary_operator_019(&program, 4.0, 0.0, 0.0)
+}
+
+#[test]
+pub fn test_or() -> Result<(), MultiError>
+{
+    let source = include_str!("tests/test_or.mips");
+    let program = compile(source)?;
+
+    check_binary_operator_019(&program, 0.0, 0.3, 1.0)?;
+    check_binary_operator_019(&program, 2.0, 0.3, 1.0)?;
+    check_binary_operator_019(&program, 0.0, 0.0, 0.0)?;
+    check_binary_operator_019(&program, 4.0, 0.0, 1.0)
+}
+
+#[test]
+pub fn test_xor() -> Result<(), MultiError>
+{
+    let source = include_str!("tests/test_xor.mips");
+    let program = compile(source)?;
+
+    check_binary_operator_019(&program, 0.0, 0.3, 1.0)?;
+    check_binary_operator_019(&program, 2.0, 0.3, 0.0)?;
+    check_binary_operator_019(&program, 0.0, 0.0, 0.0)?;
+    check_binary_operator_019(&program, 4.0, 0.0, 1.0)
+}
+
 //
 
 #[test]

@@ -1037,6 +1037,24 @@ impl BinaryOperator
     {
         BinaryOperator::new(parts, |a,b| if (a!=0.0) && (b!=0.0) { 1.0 } else { 0.0 } )
     }
+
+    pub fn nor<'a, I>(parts: I) -> Result<BinaryOperator, CompileError>
+        where I: Iterator<Item=&'a str>
+    {
+        BinaryOperator::new(parts, |a, b| if (a != 0.0) || (b != 0.0) { 0.0 } else { 1.0 })
+    }
+
+    pub fn or<'a, I>(parts: I) -> Result<BinaryOperator, CompileError>
+        where I: Iterator<Item=&'a str>
+    {
+        BinaryOperator::new(parts, |a, b| if (a != 0.0) || (b != 0.0) { 1.0 } else { 0.0 })
+    }
+
+    pub fn xor<'a, I>(parts: I) -> Result<BinaryOperator, CompileError>
+        where I: Iterator<Item=&'a str>
+    {
+        BinaryOperator::new(parts, |a, b| if (a != 0.0) != (b != 0.0) { 1.0 } else { 0.0 })
+    }
 }
 
 impl Instruction for BinaryOperator
@@ -1547,6 +1565,12 @@ pub fn parse_one_line(line:&str) -> ParsedLine
 
             } else if "and" == opcode {
                 BinaryOperator::and(parts).into()
+            } else if "nor" == opcode {
+                BinaryOperator::nor(parts).into()
+            } else if "or" == opcode {
+                BinaryOperator::or(parts).into()
+            } else if "xor" == opcode {
+                BinaryOperator::xor(parts).into()
 
             } else {
                 ParsedLine::Err(CompileError{message: format!("unrecognized opcode {}", opcode)})
